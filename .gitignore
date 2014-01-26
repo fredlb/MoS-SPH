@@ -156,3 +156,14 @@ $RECYCLE.BIN/
 # ========================
 *.sublime-project
 *.sublime-workspace
+
+
+# =======================
+# dll files WE'LL TALK ABOUT THIS MKAY
+# =======================
+*.dll
+
+# =======================
+# custom crap
+# =======================
+build/
