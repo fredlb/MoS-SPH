@@ -31,11 +31,6 @@ int main () {
     return 1;
   } 
 
-    // uncomment these lines if on Apple OS X
-  /*glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-  glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 
   GLFWwindow* window = glfwCreateWindow (kWindowWidth, kWindowHeight, "Here be fluids", NULL, NULL);
   if (!window) 
@@ -78,40 +73,8 @@ int main () {
 
 void glInit()
 {
-    // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    
-    
     GLuint programID = LoadShader( "default.vert", "flat.frag" );
-
-    /*
-    const char* vertex_shader =
-    "#version 400\n"
-    "in vec3 vp;"
-    "void main () {"
-    "  gl_Position = vec4 (vp, 1.0);"
-    "}";
-
-    const char* fragment_shader =
-    "#version 400\n"
-    "out vec4 frag_colour;"
-    "void main () {"
-    "  frag_colour = vec4 (0.5, 0.0, 0.5, 1.0);"
-    "}";
-
-    unsigned int vs = glCreateShader (GL_VERTEX_SHADER);
-    glShaderSource (vs, 1, &vertex_shader, NULL);
-    glCompileShader (vs);
-    unsigned int fs = glCreateShader (GL_FRAGMENT_SHADER);
-    glShaderSource (fs, 1, &fragment_shader, NULL);
-    glCompileShader (fs);
-
-    shader_programme = glCreateProgram ();
-    glAttachShader (shader_programme, fs);
-    glAttachShader (shader_programme, vs);
-    glLinkProgram (shader_programme);
-  */
     glUseProgram (programID);
-
 }
 
 void advance()
@@ -140,7 +103,6 @@ void render()
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
     glVertexAttribPointer (0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
 
-
     glClear (GL_COLOR_BUFFER_BIT);
     glBindVertexArray (vao);
 
@@ -150,10 +112,10 @@ void render()
     glLoadIdentity();
     glOrtho(0, 640, 0, 480, 0, 1);
  
+	//Draw points as smooth balls (with AA)
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
- 
 
     glPointSize(2.0f);
     // draw points from the currently bound VAO with current in-use shader
@@ -166,10 +128,12 @@ void render()
 */
 void particlesInit()
 {
+	//PRNG (c++11)
   std::mt19937 eng((std::random_device())());
   std::uniform_real_distribution<> pos_dist(-1,1);
   std::uniform_real_distribution<> vel_dist(-0.1,0.1);
 
+  //give all particles random starting positions and velocities
   for(int i = 0; i < kParticlesCount; i++)
   {
     float x = pos_dist(eng);

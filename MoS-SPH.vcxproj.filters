@@ -16,10 +16,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\default.vert">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="src\flat.frag">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -32,10 +32,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shader.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\particles.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
