@@ -1,5 +1,7 @@
 #include <vector>
 
+
+//TODO: change to class
 struct particle
 {
 	particle(float x, float y, float u, float v)
@@ -28,4 +30,15 @@ struct particle
 };
 
 
-typedef std::vector<particle> particleSystem;
+
+class pVec
+{
+public:
+	//mass-density etc here?
+private:
+	std::vector<particle> particles;
+	//add other simulations attributes here? (constants etc)
+};
+
+
+typedef std::vector<particle> pVec;

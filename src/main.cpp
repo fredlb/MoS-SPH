@@ -17,12 +17,16 @@ void advance();
 void render();
 void glInit();
 void particlesInit();
+void drawGrid();
 
 unsigned int vao;
 unsigned int vbo;
 unsigned int shader_programme;
 
-particleSystem pSys;
+pVec pSys;
+
+// grid
+const float h = 0.1f;
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -146,4 +150,9 @@ void particlesInit()
     //std::cout << "x: " << p.m_x << " y: " << p.m_y << " u: " << p.m_u << "  v: " << p.m_v << std::endl;
   }
   
+}
+
+void drawGrid()
+{
+
 }
