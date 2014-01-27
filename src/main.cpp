@@ -8,9 +8,9 @@
 #include "particles.h"
 #include "shader.h"
 
-#define kParticlesCount 10000
-#define kWindowWidth 640
-#define kWindowHeight 480
+#define kParticlesCount 1000
+#define kWindowWidth 800
+#define kWindowHeight 600
 float kDt = 0.001f;
 
 void advance();
@@ -117,7 +117,7 @@ void render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPointSize(2.0f);
+    glPointSize(3.0f);
     // draw points from the currently bound VAO with current in-use shader
     glDrawArrays (GL_POINTS, 0, pSys.size());
 }
@@ -131,7 +131,7 @@ void particlesInit()
 	//PRNG (c++11)
   std::mt19937 eng((std::random_device())());
   std::uniform_real_distribution<> pos_dist(-1,1);
-  std::uniform_real_distribution<> vel_dist(-0.1,0.1);
+  std::uniform_real_distribution<> vel_dist(-0.3,0.3);
 
   //give all particles random starting positions and velocities
   for(int i = 0; i < kParticlesCount; i++)
