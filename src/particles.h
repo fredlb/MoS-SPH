@@ -31,7 +31,7 @@ struct particle
 
 
 
-class pVec
+class particleSystem
 {
 public:
 	//mass-density etc here?
