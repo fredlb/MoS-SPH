@@ -150,7 +150,6 @@ for i = 1:n
         poss(i,:) = poss(i,:) + velocity(i,:)*dt;
     end
     
-    
     if(poss(i,2) < yl)
         x = poss(i,:);
         cp = [poss(i,1) 0];
@@ -164,12 +163,12 @@ for i = 1:n
     
     if(poss(i,1) > 2)
         x = poss(i,:);
-        cp = [0 poss(i,2)];
+        cp = [2 poss(i,2)];
         d = sqrt(dot(cp-x,cp-x));
         normal = [-1 0];
        
         ui = velocity(i,:);
-        poss(i,:) =cp + d*normal;
+        poss(i,:) = cp +  d*normal;
         velocity(i,:) =ui - (1 + cr*(d/(dt*sqrt(dot(ui,ui)))))*(ui*normal')*normal;
     end
     
