@@ -11,17 +11,17 @@ N = size(meshgrid(0:1/n:1,0:1/n:1));
 Nx = N(2);
 Ny = N(1);
 n = Nx*Ny;
-X = reshape(X,[N 1]);
-Y = reshape(Y,[N 1]);
+X = reshape(X,[n 1]);
+Y = reshape(Y,[n 1]);
 
-poss = zeros(N,2);
+poss = zeros(n,2);
 poss(:,1) = X;
 poss(:,2) = Y;
 
-velocity = zeros(N,2);
-Acc = zeros(N,2);
-density = zeros(N,1);
-pressure = zeros(N,1);
+velocity = zeros(n,2);
+Acc = zeros(n,2);
+density = zeros(n,1);
+pressure = zeros(n,1);
 
 %% Constants 
 pm = 1;                     %Particle mass (changes later)
@@ -49,15 +49,14 @@ open(vidObj);
 
 %Write particles
 figure
-yl = 0;
 plot(poss(:,1),poss(:,2),'*')
 hold on
-plot(poss(round(N/2):N,1),poss(round(N/2):N,2),'r*')
+plot(poss(round(n/2):n,1),poss(round(n/2):n,2),'r*')
 hold off
 axis tight
 set(gca,'nextplot','replacechildren');
 xlim([0 2])
-ylim([yl 2])
+ylim([0 2])
 
 %% Adjust mass after desierd density
 md = 0;
@@ -81,7 +80,6 @@ for i = 1:n
         r = poss(i,:) - poss(j,:);
         if((r*r') < h^2)
             md = md + pm*Wkernel(r,h,1);
-            num = num +  1;
         end
     end
     density(i) = md;
@@ -141,7 +139,7 @@ for i = 1:n
     end
 
 %% Colision detection and response
-    if(poss(i,2) < yl)
+    if(poss(i,2) < 0)
         x = poss(i,:);
         cp = [poss(i,1) 0];
         d = sqrt(dot(cp-x,cp-x));
@@ -182,11 +180,11 @@ writeVideo(vidObj,currFrame);
 
 plot(poss(:,1),poss(:,2),'*')
 xlim([0 2])
-ylim([yl 2])
+ylim([0 2])
 hold on
-plot(poss(round(N/2):N,1),poss(round(N/2):N,2),'r*')
+plot(poss(round(n/2):n,1),poss(round(n/2):n,2),'r*')
 hold off
 xlim([0 2])
-ylim([yl 2])
+ylim([0 2])
 end
 close(vidObj)
