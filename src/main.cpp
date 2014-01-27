@@ -117,7 +117,7 @@ void render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPointSize(3.0f);
+    glPointSize(5.0f);
     // draw points from the currently bound VAO with current in-use shader
     glDrawArrays (GL_POINTS, 0, pSys.size());
 }
