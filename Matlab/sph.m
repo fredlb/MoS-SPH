@@ -1,26 +1,18 @@
+%% SPH
+%% Partiles
 clear all
 close all
 
-%particle = [mass, possx, possy, velox, veloy,massdensity, pressure, forcex, forcey ];
-
-[X,Y] = meshgrid(0.5:1/20:1.5,0:1/20:1);
-N = size(meshgrid(0:1/20:1,0:1/20:1));
+n = 20;
+xbegin = 0.5;
+ybegin = 0;
+[X,Y] = meshgrid(xbegin:1/n:(xbegin+1),ybegin:1/n:(ybegin+1));
+N = size(meshgrid(0:1/n:1,0:1/n:1));
 Nx = N(2);
 Ny = N(1);
-N = Nx*Ny;
+n = Nx*Ny;
 X = reshape(X,[N 1]);
 Y = reshape(Y,[N 1]);
-
-%{
-h = 0.05;
-[X,Y] = meshgrid(0:h/1.3:0.5,0:h/1.3:0.5);
-N = size(meshgrid(0:h/1.3:0.5,0:h/1.3:0.5));
-Nx = N(2);
-Ny = N(1);
-N = Nx*Ny;
-X = reshape(X,[N 1]);
-Y = reshape(Y,[N 1]);
-%}
 
 poss = zeros(N,2);
 poss(:,1) = X;
@@ -31,26 +23,31 @@ Acc = zeros(N,2);
 density = zeros(N,1);
 pressure = zeros(N,1);
 
-pm = 1; %Particle mass
+%% Constants 
+pm = 1;                     %Particle mass (changes later)
 
-x = 20;
-n = N; 
-A = 1*1;
-h = sqrt((A*x)/(n*pi));
+x = 20;                     %Average number of particles in kernel
+A = 1*1;                    %Area
+h = sqrt((A*x)/(n*pi));     %kernel size
 
-g = -9.8; 
-md0 = 988;
-k = 30;
-sigma = 0.0728;
 dt = 0.005;
-cr = 0.2;
-vc = 3.5;
-l = sqrt(md0/x);
+k = 30;
 
+g = -9.8;                   
+md0 = 988;
+surfaceTension = 0.0728;
+surfaceLimit = sqrt(md0/x);
+cr = 0.2;                   %Dampening on border cases
+viscosityConstant = 3.5;
+runTime = 10;
+
+
+%% Video recording
 vidObj = VideoWriter('fluid6','Motion JPEG AVI');
 vidObj.FrameRate = round(1/dt);
 open(vidObj);
 
+%Write particles
 figure
 yl = 0;
 plot(poss(:,1),poss(:,2),'*')
@@ -59,14 +56,10 @@ plot(poss(round(N/2):N,1),poss(round(N/2):N,2),'r*')
 hold off
 axis tight
 set(gca,'nextplot','replacechildren');
-%hold on
-%figure(2)
-%plot(poss(50,1),poss(50,2),'r*')
-%hold on 
 xlim([0 2])
 ylim([yl 2])
 
-time = 1;
+%% Adjust mass after desierd density
 md = 0;
 for i = 1:n
     for j = 1:n
@@ -79,14 +72,9 @@ end
 amd = md/n;
 pm = (amd*md0)/(amd*amd);
 
-
-for t = 0:dt:1
-%Density and pressure
-Apast = Acc;
-%Vpast = velocity;
-%Ppast = position;
-
-num = 0;
+%% Begin time loop
+for t = 0:dt:runTime
+%% Density and pressure
 for i = 1:n
     md = 0;
     for j = 1:n
@@ -96,21 +84,20 @@ for i = 1:n
             num = num +  1;
         end
     end
-    %num
     density(i) = md;
     pressure(i) = k*(md-md0);
 end
-%num/(N)
 
-%Force
+%% Forces
 for i = 1:n
-    fp = 0;
-    fv = 0;
-    ni = 0;
-    lci = 0;
+    fp = 0;             %Pressure force
+    fv = 0;             %Viscosity force
+    ni = 0;             %Normal
+    lci = 0;            %laplacian of ci (gradient of normal)
+    fs = 0;             %Surface tension force
+   
+    fg = g*density(i);  %Gravity
     
-    fg = g*density(i);
-    %fg = 0;
     for j = 1:n
         r = poss(i,:) - poss(j,:);
         if((r*r')< h^2)
@@ -123,10 +110,15 @@ for i = 1:n
         end
         end
     end
-    fs = 0;
-    if(sqrt(dot(ni,ni)) > l)
-        fs = -sigma*lci*(ni/sqrt(dot(ni,ni)));
+    
+    if(sqrt(dot(ni,ni)) > surfaceLimit)
+        fs = -surfaceTension*lci*(ni/sqrt(dot(ni,ni)));
     end
+    
+    fp = -density(i)*fp;
+    fv = (viscosityConstant)*fv;
+    
+    %If you want to play with starting force
     fa = 0;
     %{
     if(t < 0.6)
@@ -135,11 +127,9 @@ for i = 1:n
         end
     end
     %}
-    fp = -density(i)*fp;
-    fv = (vc)*fv;
     Acc(i,:) = (fp + fv + fs + [0 fg] + fa);
 end
-%-------------------Time integration-----------------------------------
+%% Time integration
 for i = 1:n
     a = Acc(i,:)/density(i);
     if(t == 0)
@@ -149,7 +139,8 @@ for i = 1:n
         velocity(i,:) = velocity(i,:) + a*dt;
         poss(i,:) = poss(i,:) + velocity(i,:)*dt;
     end
-    
+
+%% Colision detection and response
     if(poss(i,2) < yl)
         x = poss(i,:);
         cp = [poss(i,1) 0];
@@ -168,7 +159,7 @@ for i = 1:n
         normal = [-1 0];
        
         ui = velocity(i,:);
-        poss(i,:) = cp +  d*normal;
+        poss(i,:) =cp +  d*normal;
         velocity(i,:) =ui - (1 + cr*(d/(dt*sqrt(dot(ui,ui)))))*(ui*normal')*normal;
     end
     
@@ -185,30 +176,17 @@ for i = 1:n
     
 end
 
-
-
-%figure(1)
-
+%% Make pretty movie
 currFrame = getframe;
 writeVideo(vidObj,currFrame);
 
 plot(poss(:,1),poss(:,2),'*')
 xlim([0 2])
 ylim([yl 2])
-%figure(2)
 hold on
 plot(poss(round(N/2):N,1),poss(round(N/2):N,2),'r*')
 hold off
 xlim([0 2])
 ylim([yl 2])
-
-
-%{
-Pposs = poss(50,:)
-Pvelovity = velovity(50,:)
-PAcc = Acc(50,:)
-Pdensity = density(50)
-Ppressure = pressure(50)
-%}
 end
 close(vidObj)
