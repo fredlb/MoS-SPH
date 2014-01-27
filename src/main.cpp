@@ -122,7 +122,6 @@ void render()
     glDrawArrays (GL_POINTS, 0, pSys.size());
 }
 
-
 /**
 * just distribute particles randomly in [-1,1] with random velocities
 */
