@@ -15,6 +15,7 @@
 #define kWindowWidth 640
 #define kWindowHeight 480
 #define kPi 3.14159265359
+#define g -9.81
 
 
 void advance();
@@ -23,6 +24,12 @@ void glInit();
 void particlesInit();
 void drawGrid();
 void updateGrid();
+
+float Wdeafult(float distance2);
+float* WgradPressure(float dx, float dy);
+float WlaplacianViscosity(float distance2);
+float* WgradDefult(float dx, float dy);
+float WlaplacianDefult(float distance2);
 
 unsigned int vao;
 unsigned int vbo;
@@ -33,7 +40,25 @@ const float interactionRadius =  0.1f;
 const float cellSize = interactionRadius;
 const float kDt = 0.001f;
 const int kCellCount = 100;
+const float kParticleMass = 0.02f;
+const float restDensity = 988.0f;
+const int kstiffnes = 5;
+const float surfaceTension = 0.07f;
+const float viscosityConstant = 3.5f;
 
+float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x) 
+							// where x is average particle sum in kernel
+
+//Bör vara en del av particle structen så att man kommer åt "partikel j"
+float massDensityArray[kParticlesCount]; 
+float pressureArray[kParticlesCount];
+float forceX[kParticlesCount];
+float forceY[kParticlesCount];
+
+//Every force
+float	pressureForcex,	pressureForcey,	viscosityForcex,
+		viscosityForcey,normalx, normaly, gradNormal,
+		surfaceTensionForcex,surfaceTensionForcey, gravity;
 
 
 struct particle
@@ -207,6 +232,7 @@ void updateGrid()
 
 void loopStructure()
 {
+	//Mass-density and pressure loop
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
@@ -218,11 +244,96 @@ void loopStructure()
 		{
 			for(size_t gy = y-1; gy < y+1; gy++)
 			{
+				float massDensity = 0.0;
 				//loop over neighbors
 				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
 				{
 					//do fancy math
+					float dx = pi.m_x - ppj->m_x;
+					float dy = pi.m_y - ppj->m_y;
+					float distance2 = dx*dx + dy*dy;
+
+					if(distance2 < interactionRadius*interactionRadius)
+					{
+						//Density
+						massDensity += kParticleMass*Wdeafult(distance2);
+					}
 				}
+				//save massDensity
+				massDensityArray[i] = massDensity;
+				//save Pressure
+				pressureArray[i] = kstiffnes * (massDensity - restDensity);
+			}
+		}
+	}
+
+
+	//Force loop
+	for(size_t i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+		int x = pi.m_x/cellSize;
+		int y = pi.m_y/cellSize;
+
+		//loop over cells 
+		for(size_t gx = x-1; gx < x+1; gx++)
+		{
+			for(size_t gy = y-1; gy < y+1; gy++)
+			{
+				pressureForcex = 0.0f; 
+				pressureForcey = 0.0f;
+				viscosityForcex = 0.0f;
+				viscosityForcey = 0.0f;
+				normalx = 0.0f;
+				normaly = 0.0f;
+				gradNormal = 0.0f;
+				surfaceTensionForcex = 0.0f;
+				surfaceTensionForcey = 0.0f;
+				gravity = g*massDensityArray[i];
+
+				//loop over neighbors
+				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
+				{
+					float dx = pi.m_x - ppj->m_x;
+					float dy = pi.m_y - ppj->m_y;
+					float distance2 = dx*dx + dy*dy;
+					if(distance2 < interactionRadius*interactionRadius)
+					{
+						float* Wnormal = WgradDefult(dx, dy);
+						/*Need acces to ppj massDensity
+						
+						normalx += (kParticleMass/massDensityArray[j])*Wnormal[0];
+						normaly += (kParticleMass/massDensityArray[j])*Wnormal[1];
+
+						gradNormalx += (kParticleMass/massDensityArray[j]*WlaplacianDefult(distance2);
+						*/
+						if( distance2 != 0)
+						{
+							float* W = WgradPressure(dx,dy);
+							float velocityDiffu = pi.m_u - ppj->m_u;
+							float velocityDiffv = pi.m_v - ppj->m_v;
+							/* Need acces to ppj massDensity and Pressure
+							pressureForcex += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[0];
+							pressureForcey += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[1];
+							
+							viscosityForcex += velocityDiffu * (kParticleMass/massDensityArray[j]) * WlaplacianViscosity(distance2);
+							viscosityForcey += velocityDiffu * (kParticleMass/massDensityArray[j]) * WlaplacianViscosity(distance2);
+							*/
+						}
+					}
+				}
+				float normalLenght = sqrt(normalx*normalx + normaly*normaly);
+				if(normalLenght > surfaceLimit){
+					surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
+				}
+				pressureForcex = -massDensityArray[i] * pressureForcex;
+				pressureForcey = -massDensityArray[i] * pressureForcey;
+
+				viscosityForcex = viscosityConstant*viscosityForcex;
+				viscosityForcey = viscosityConstant*viscosityForcey;
+
+				forceX[i] = pressureForcex + viscosityForcex + surfaceTensionForcex;
+				forceY[i] = pressureForcex + viscosityForcey + surfaceTensionForcey + gravity;
 			}
 		}
 	}
@@ -240,36 +351,45 @@ float Wdeafult(float distance2)
 	return W;
 }
 
-float[] WgradPressure(float dx, float dy)
+float* WgradPressure(float dx, float dy)
 {
+	float* W;
 	float distance2 = dx*dx + dy*dy;
-	float Wx = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((h-sqrt(distance2)),2);
-	float Wy = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((h-sqrt(distance2)),2);
+	
+	W[0] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
+	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
+
+	return W;
 }
 
 float WlaplacianViscosity(float distance2)
 {
-	float W = (45/(kPi*pow(interactionRadius,6)))*(h-sqrt(distance2));
+	float W = (45/(kPi*pow(interactionRadius,6)))*(interactionRadius-sqrt(distance2));
 	return W;
 }
 
-float WgradDefult(float dx, float dy)
+float* WgradDefult(float dx, float dy)
 {
+	float* W;
 	float distance2 = dx*dx + dy*dy;
-	float Wx = -(945/(32*kPi*pow(h,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
-	float Wy = -(945/(32*kPi*pow(h,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
+
+	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
+	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
+	
+	return W;
 }
 
 float WlaplacianDefult(float distance2)
 {
-	float W = -(945/(32*kPi*pow(h,9)))*(pow(interactionRadius,2)-distance2)*(3*pow(interactionRadius,2)-7*distance2);
+	float W = -(945/(32*kPi*pow(interactionRadius,9)))*(pow(interactionRadius,2)-distance2)*(3*pow(interactionRadius,2)-7*distance2);
 	return W;
 }
 
+/*
 float distance2(particle* currentParticle, particle* neighbour)
 {
 	// |ri - rj|^2
 	return (currentParticle->m_x - neighbour->m_x)*(currentParticle->m_x - neighbour->m_x) +
 		(currentParticle->m_y - neighbour->m_y)*(currentParticle->m_y - neighbour->m_y);
 }
-
+*/
