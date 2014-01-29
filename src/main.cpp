@@ -46,9 +46,9 @@ const float kDt = 0.001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 5;
-const float surfaceTension = 0.07f;
+const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.0f;
+const float damp = 0.2f;
 
 float particleMass;
 
@@ -318,7 +318,9 @@ void loopStructure()
 		
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		
 		float mdi = pi.m_massDensity;
+		float mdj = 0.0f;
 		gravity = g*mdi;
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
@@ -334,8 +336,10 @@ void loopStructure()
 					if(distance2 < interactionRadius*interactionRadius)
 					{
 						float* Wnormal = WgradDefult(dx, dy);
-						float mdj = ppj->m_massDensity;
-						
+						mdj = ppj->m_massDensity;
+						//std::cout <<"W[0] = " << Wnormal[0] << std::endl;
+						//std::cout <<"W[1] = " << Wnormal[1] << std::endl;
+
 						normalx += (particleMass/mdj)*Wnormal[0];
 						normaly += (particleMass/mdj)*Wnormal[1];
 
@@ -403,9 +407,10 @@ void loopStructure()
 
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
-
+			std::cout << "d = " << d << std::endl; 
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_v = 0.0f;
 		}
 
 		if(pi.m_x > 1)
@@ -418,7 +423,8 @@ void loopStructure()
 			n = -1;
 
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_v = 0.0f;
 		}
 
 		if(pi.m_y < -1)
@@ -431,7 +437,8 @@ void loopStructure()
 			n = 1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_u = 0.0f;
 		}
 		
 		if(pi.m_y > 1)
@@ -444,7 +451,8 @@ void loopStructure()
 			n = -1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_u = 0.0f;
 		}
 
 	}
