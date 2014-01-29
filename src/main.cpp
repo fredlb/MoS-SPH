@@ -45,10 +45,10 @@ const float cellSize = interactionRadius;
 const float kDt = 0.001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
-const int kstiffnes = 5;
+const int kstiffnes = 10;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.2f;
+const float damp = 0.0f;
 
 float particleMass;
 
@@ -407,7 +407,6 @@ void loopStructure()
 
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
-			std::cout << "d = " << d << std::endl; 
 			pi.m_x = cp + d*n;
 			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
 			pi.m_v = 0.0f;
@@ -517,7 +516,7 @@ float* WgradPressure(float dx, float dy)
 	float distance2 = dx*dx + dy*dy;
 	
 	W[0] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
-	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
+	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dy/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
 
 	return W;
 }
@@ -534,7 +533,7 @@ float* WgradDefult(float dx, float dy)
 	float distance2 = dx*dx + dy*dy;
 
 	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
-	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
+	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dy*pow((pow(interactionRadius,2)-distance2),2);
 	
 	return W;
 }
