@@ -25,6 +25,7 @@ void particlesInit();
 void drawGrid();
 void updateGrid();
 void createDrawablePoints();
+ void loopStructure();
 
 
 float calculateMass();
@@ -130,14 +131,15 @@ int main () {
 
   updateGrid();
   particleMass = calculateMass();
-  std::cout << "Mass: "<< particleMass;
+  std::cout << "Mass: "<< particleMass << std::endl;
 
   glInit();
 
 
   while (!glfwWindowShouldClose (window)) 
   {
-	  updateGrid();
+	  //updateGrid();
+	  loopStructure();
 	  createDrawablePoints();
       render();
 
@@ -359,7 +361,7 @@ void loopStructure()
 							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
 							
 							viscosityForcex += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
-							viscosityForcey += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
+							viscosityForcey += velocityDiffv * (particleMass/mdj) * WlaplacianViscosity(distance2);
 							
 						}
 					}
@@ -378,8 +380,7 @@ void loopStructure()
 		viscosityForcey = viscosityConstant*viscosityForcey;
 		
 		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-		accelerationY = (pressureForcex + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
-		
+		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
 		//Time integration
 		//Sebastian Superior integration
 		
@@ -396,7 +397,7 @@ void loopStructure()
 			pi.m_v += kDt*accelerationY;
 
 			pi.m_x += kDt*pi.m_u;
-			pi.m_v += kDt*pi.m_v;
+			pi.m_y += kDt*pi.m_v;
 		//}
 
 		//Colision handling and response
@@ -407,7 +408,7 @@ void loopStructure()
 			u = pi.m_u;
 			cp = -1;
 
-			d = sqrt((cp-x)*(cp-x));
+			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 
 			pi.m_x = cp + d*n;
@@ -420,7 +421,7 @@ void loopStructure()
 			u = pi.m_u;
 			cp = 1;
 
-			d = sqrt((cp-x)*(cp-x));
+			d = sqrt((cp-current)*(cp-current));
 			n = -1;
 
 			pi.m_x = cp + d*n;
@@ -433,7 +434,7 @@ void loopStructure()
 			u = pi.m_v;
 			cp = -1;
 
-			d = sqrt((cp-x)*(cp-x));
+			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 
 			pi.m_y = cp + d*n;
@@ -446,7 +447,7 @@ void loopStructure()
 			u = pi.m_v;
 			cp = 1;
 
-			d = sqrt((cp-x)*(cp-x));
+			d = sqrt((cp-current)*(cp-current));
 			n = -1;
 
 			pi.m_y = cp + d*n;
