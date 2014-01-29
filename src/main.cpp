@@ -92,7 +92,15 @@ typedef std::vector<particle> pVec;
 pVec pSys;
 
 particle particles[kParticlesCount];
-particle* grid[kCellCount][kCellCount];
+//particle* grid[kCellCount][kCellCount];
+
+const size_t kGridWidth = (size_t)(2.0 / cellSize);
+const size_t kGridHeight = (size_t)(2.0 / cellSize);
+const size_t kGridCellCount = kGridWidth * kGridHeight;
+size_t gridCoords[kParticlesCount*2];
+particle* grid[400];
+
+
 
 std::vector<point> drawablePoints;
 
@@ -124,22 +132,21 @@ int main () {
   printf ("OpenGL version supported %s\n", version);
 
   particlesInit();
-  createDrawablePoints();
-
+  updateGrid();
   particleMass = calculateMass();
 
   glInit();
 
+
   while (!glfwWindowShouldClose (window)) 
   {
+	  updateGrid();
+	  createDrawablePoints();
+      render();
 
-    //advance();
-
-    render();
-    
-    glfwPollEvents ();
-    // put the stuff we've been drawing onto the display
-    glfwSwapBuffers (window);
+	  glfwPollEvents ();
+      // put the stuff we've been drawing onto the display
+      glfwSwapBuffers (window);
   }
 
 
@@ -235,29 +242,24 @@ void updateGrid()
 	{
 		particle& pi = particles[i];
 
-		int x = pi.m_x/cellSize;
-		int y = pi.m_y/cellSize;
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 
-		if(x < 1)
-		{
+		if (x < 1)
 			x = 1;
-		}
-		else if( x > kCellCount - 2)
-		{
-			x = kCellCount - 2;
-		}
+		else if (x > kGridWidth-2)
+			x = kGridWidth-2;
 
-		if(y < 1)
-		{
+		if (y < 1)
 			y = 1;
-		}
-		else if( y > kCellCount - 2)
-		{
-			y = kCellCount - 2;
-		}
+		else if (y > kGridHeight-2)
+			y = kGridHeight-2;
 
-		pi.next = grid[x][y];
-		grid[x][y] = &pi;
+		pi.next = grid[x+y*kGridWidth];
+		grid[x+y*kGridWidth] = &pi;
+
+		gridCoords[i*2] = x;
+		gridCoords[i*2+1] = y;
 	}
 }
 
@@ -268,17 +270,19 @@ void loopStructure()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
-		int x = pi.m_x/cellSize;
-		int y = pi.m_y/cellSize;
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 
-		float massDensity = 0.0;
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		float massDensity = 0.0f;
 		//loop over cells 
-		for(size_t gx = x-1; gx < x+1; gx++)
+		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
-			for(size_t gy = y-1; gy < y+1; gy++)
+			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
 			{
 				//loop over neighbors
-				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
+				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
 					//do fancy math
 					float dx = pi.m_x - ppj->m_x;
@@ -304,8 +308,8 @@ void loopStructure()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
-		int x = pi.m_x/cellSize;
-		int y = pi.m_y/cellSize;
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 
 		pressureForcex = 0.0f; 
 		pressureForcey = 0.0f;
@@ -317,14 +321,15 @@ void loopStructure()
 		surfaceTensionForcex = 0.0f;
 		surfaceTensionForcey = 0.0f;
 		gravity = g*massDensityArray[i];
-
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
 		//loop over cells 
-		for(size_t gx = x-1; gx < x+1; gx++)
+		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
-			for(size_t gy = y-1; gy < y+1; gy++)
+			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
 			{
 				//loop over neighbors
-				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
+				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
@@ -453,17 +458,22 @@ float calculateMass()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
-		int x = pi.m_x/cellSize;
-		int y = pi.m_y/cellSize;
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 		
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
+
 		//loop over cells 
-		for(size_t gx = x-1; gx < x+1; gx++)
+		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
-			for(size_t gy = y-1; gy < y+1; gy++)
+			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
 			{
 				//loop over neighbors
-				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
+				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
+					const particle& pj = *ppj;
+
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
