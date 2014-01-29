@@ -46,6 +46,8 @@ const float restDensity = 988.0f;
 const int kstiffnes = 5;
 const float surfaceTension = 0.07f;
 const float viscosityConstant = 3.5f;
+const float damp = 0.0f;
+
 float particleMass;
 
 float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x) 
@@ -260,7 +262,7 @@ void loopStructure()
 					if(distance2 < interactionRadius*interactionRadius)
 					{
 						//Density
-						massDensity += kParticleMass*Wdeafult(distance2);
+						massDensity += particleMass*Wdeafult(distance2);
 					}
 				}
 			}
@@ -314,8 +316,9 @@ void loopStructure()
 						if( distance2 != 0)
 						{
 							float* W = WgradPressure(dx,dy);
-							float velocityDiffu = pi.m_u - ppj->m_u;
-							float velocityDiffv = pi.m_v - ppj->m_v;
+							// uj - ui
+							float velocityDiffu = ppj->m_u - pi.m_u;
+							float velocityDiffv = ppj->m_v - pi.m_v;
 							/* Need acces to ppj massDensity and Pressure
 							pressureForcex += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[0];
 							pressureForcey += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[1];
@@ -360,6 +363,60 @@ void loopStructure()
 			pi.m_x += kDt*pi.m_u;
 			pi.m_v += kDt*pi.m_v;
 		//}
+
+		//Colision handling and response
+		float current,cp,d,n,u;
+		if(pi.m_x < -1)
+		{
+			current = pi.m_x;
+			u = pi.m_u;
+			cp = -1;
+
+			d = sqrt((cp-x)*(cp-x));
+			n = 1;
+
+			pi.m_x = cp + d*n;
+			pi.m_u = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+		}
+
+		if(pi.m_x > 1)
+		{
+			current = pi.m_x;
+			u = pi.m_u;
+			cp = 1;
+
+			d = sqrt((cp-x)*(cp-x));
+			n = -1;
+
+			pi.m_x = cp + d*n;
+			pi.m_u = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+		}
+
+		if(pi.m_y < -1)
+		{
+			current = pi.m_y;
+			u = pi.m_v;
+			cp = -1;
+
+			d = sqrt((cp-x)*(cp-x));
+			n = 1;
+
+			pi.m_y = cp + d*n;
+			pi.m_v = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+		}
+		
+		if(pi.m_x > 1)
+		{
+			current = pi.m_y;
+			u = pi.m_v;
+			cp = 1;
+
+			d = sqrt((cp-x)*(cp-x));
+			n = -1;
+
+			pi.m_y = cp + d*n;
+			pi.m_v = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
+		}
 
 	}
 }
