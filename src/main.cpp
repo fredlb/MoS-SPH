@@ -340,6 +340,24 @@ void loopStructure()
 		accelerationY = (pressureForcex + viscosityForcey + surfaceTensionForcey + gravity)/massDensityArray[i];
 		
 		//Time integration
+		//Sebastian Superior integration
+		
+		/*if(t == 0)
+		{
+			pi.m_u += pi.m_u + 0.5*kDt*accelerationX;
+			pi.m_v += pi.m_v + 0.5*kDt*accelerationY;
+
+			pi.m_x += kDt*pi.m_u;
+			pi.m_y += kDt*pi.m_v;
+		}else
+		{*/
+			pi.m_u += kDt*accelerationX;
+			pi.m_v += kDt*accelerationY;
+
+			pi.m_x += kDt*pi.m_u;
+			pi.m_v += kDt*pi.m_v;
+		//}
+
 	}
 }
 
