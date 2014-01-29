@@ -45,7 +45,7 @@ const float cellSize = interactionRadius;
 const float kDt = 0.001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
-const int kstiffnes = 10;
+const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
 const float damp = 0.0f;
@@ -409,7 +409,6 @@ void loopStructure()
 			n = 1;
 			pi.m_x = cp + d*n;
 			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
-			pi.m_v = 0.0f;
 		}
 
 		if(pi.m_x > 1)
@@ -423,7 +422,6 @@ void loopStructure()
 
 			pi.m_x = cp + d*n;
 			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
-			pi.m_v = 0.0f;
 		}
 
 		if(pi.m_y < -1)
@@ -437,7 +435,7 @@ void loopStructure()
 
 			pi.m_y = cp + d*n;
 			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
-			pi.m_u = 0.0f;
+			std::cout << "vu= " << pi.m_u << std::endl;
 		}
 		
 		if(pi.m_y > 1)
@@ -451,7 +449,6 @@ void loopStructure()
 
 			pi.m_y = cp + d*n;
 			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
-			pi.m_u = 0.0f;
 		}
 
 	}
