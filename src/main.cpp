@@ -25,6 +25,8 @@ void particlesInit();
 void drawGrid();
 void updateGrid();
 
+float calculateMass();
+
 float Wdeafult(float distance2);
 float* WgradPressure(float dx, float dy);
 float WlaplacianViscosity(float distance2);
@@ -40,11 +42,11 @@ const float interactionRadius =  0.1f;
 const float cellSize = interactionRadius;
 const float kDt = 0.001f;
 const int kCellCount = 100;
-const float kParticleMass = 0.02f;
 const float restDensity = 988.0f;
 const int kstiffnes = 5;
 const float surfaceTension = 0.07f;
 const float viscosityConstant = 3.5f;
+float particleMass;
 
 float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x) 
 							// where x is average particle sum in kernel
@@ -113,6 +115,7 @@ int main () {
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
   //particlesInit();
+  particleMass = calculateMass();
   glInit();
 
   while (!glfwWindowShouldClose (window)) 
@@ -359,6 +362,38 @@ void loopStructure()
 		//}
 
 	}
+}
+
+float calculateMass()
+{
+	float density = 0.0f; 
+	for(size_t i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+		int x = pi.m_x/cellSize;
+		int y = pi.m_y/cellSize;
+		
+		//loop over cells 
+		for(size_t gx = x-1; gx < x+1; gx++)
+		{
+			for(size_t gy = y-1; gy < y+1; gy++)
+			{
+				//loop over neighbors
+				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
+				{
+					float dx = pi.m_x - ppj->m_x;
+					float dy = pi.m_y - ppj->m_y;
+					float distance2 = dx*dx + dy*dy;
+					if(distance2 < interactionRadius*interactionRadius)
+					{
+						density += Wdeafult(distance2);
+					}
+				}
+			}
+		}
+	}
+	float dA = density/kParticlesCount;
+	return (dA*restDensity)/(dA*dA);
 }
 
 float WKernel(float distance2)
