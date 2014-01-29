@@ -57,11 +57,6 @@ float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x)
 float accelerationX;
 float accelerationY;
 
-//Bör vara en del av particle structen så att man kommer åt "partikel j"
-float massDensityArray[kParticlesCount]; 
-float pressureArray[kParticlesCount];
-
-
 //Every force
 float	pressureForcex,	pressureForcey,	viscosityForcex,
 		viscosityForcey,normalx, normaly, gradNormal,
@@ -132,8 +127,10 @@ int main () {
   printf ("OpenGL version supported %s\n", version);
 
   particlesInit();
+
   updateGrid();
   particleMass = calculateMass();
+  std::cout << "Mass: "<< particleMass;
 
   glInit();
 
@@ -245,6 +242,7 @@ void updateGrid()
 		int x = (1 + pi.m_x)/cellSize;
 		int y = (1 + pi.m_y)/cellSize;
 
+
 		if (x < 1)
 			x = 1;
 		else if (x > kGridWidth-2)
@@ -270,6 +268,7 @@ void loopStructure()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
+
 		int x = (1 + pi.m_x)/cellSize;
 		int y = (1 + pi.m_y)/cellSize;
 
@@ -298,9 +297,9 @@ void loopStructure()
 			}
 		}
 		//save massDensity
-		massDensityArray[i] = massDensity;
+		pi.m_massDensity = massDensity;
 		//save Pressure
-		pressureArray[i] = kstiffnes * (massDensity - restDensity);
+		pi.m_pressure = kstiffnes * (massDensity - restDensity);
 	}
 
 
@@ -308,6 +307,7 @@ void loopStructure()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
+
 		int x = (1 + pi.m_x)/cellSize;
 		int y = (1 + pi.m_y)/cellSize;
 
@@ -320,9 +320,11 @@ void loopStructure()
 		gradNormal = 0.0f;
 		surfaceTensionForcex = 0.0f;
 		surfaceTensionForcey = 0.0f;
-		gravity = g*massDensityArray[i];
+		
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		float mdi = pi.m_massDensity;
+		gravity = g*mdi;
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
@@ -337,26 +339,28 @@ void loopStructure()
 					if(distance2 < interactionRadius*interactionRadius)
 					{
 						float* Wnormal = WgradDefult(dx, dy);
-						/*Need acces to ppj massDensity
+						float mdj = ppj->m_massDensity;
 						
-						normalx += (kParticleMass/massDensityArray[j])*Wnormal[0];
-						normaly += (kParticleMass/massDensityArray[j])*Wnormal[1];
+						normalx += (particleMass/mdj)*Wnormal[0];
+						normaly += (particleMass/mdj)*Wnormal[1];
 
-						gradNormalx += (kParticleMass/massDensityArray[j]*WlaplacianDefult(distance2);
-						*/
+						gradNormal += (particleMass/mdj)*WlaplacianDefult(distance2);
+						
 						if( distance2 != 0)
 						{
 							float* W = WgradPressure(dx,dy);
 							// uj - ui
 							float velocityDiffu = ppj->m_u - pi.m_u;
 							float velocityDiffv = ppj->m_v - pi.m_v;
-							/* Need acces to ppj massDensity and Pressure
-							pressureForcex += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[0];
-							pressureForcey += ((pressureArray[i]/pow(massDensityArray[i],2))+(pressureArray[j]/pow(massDensityArray[j],2))*kparticleMass*W[1];
+
+							float pressi = pi.m_pressure;
+							float pressj = ppj->m_pressure;
+							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[0];
+							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
 							
-							viscosityForcex += velocityDiffu * (kParticleMass/massDensityArray[j]) * WlaplacianViscosity(distance2);
-							viscosityForcey += velocityDiffu * (kParticleMass/massDensityArray[j]) * WlaplacianViscosity(distance2);
-							*/
+							viscosityForcex += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
+							viscosityForcey += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
+							
 						}
 					}
 				}
@@ -367,14 +371,14 @@ void loopStructure()
 		if(normalLenght > surfaceLimit){
 			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
 		}
-		pressureForcex = -massDensityArray[i] * pressureForcex;
-		pressureForcey = -massDensityArray[i] * pressureForcey;
+		pressureForcex = -mdi * pressureForcex;
+		pressureForcey = -mdi * pressureForcey;
 		
 		viscosityForcex = viscosityConstant*viscosityForcex;
 		viscosityForcey = viscosityConstant*viscosityForcey;
 		
-		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/massDensityArray[i];
-		accelerationY = (pressureForcex + viscosityForcey + surfaceTensionForcey + gravity)/massDensityArray[i];
+		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
+		accelerationY = (pressureForcex + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
 		
 		//Time integration
 		//Sebastian Superior integration
@@ -458,9 +462,10 @@ float calculateMass()
 	for(size_t i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
+
 		int x = (1 + pi.m_x)/cellSize;
 		int y = (1 + pi.m_y)/cellSize;
-		
+
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
 
