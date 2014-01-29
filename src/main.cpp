@@ -11,7 +11,7 @@
 #include <vector>
 #include <math.h>
 
-#define kParticlesCount 1000
+#define kParticlesCount 1024
 #define kWindowWidth 640
 #define kWindowHeight 480
 #define kPi 3.14159265359
@@ -24,6 +24,8 @@ void glInit();
 void particlesInit();
 void drawGrid();
 void updateGrid();
+void createDrawablePoints();
+
 
 float Wdeafult(float distance2);
 float* WgradPressure(float dx, float dy);
@@ -69,6 +71,9 @@ struct particle
 	float m_u; //x-velocity
 	float m_v; //y-velocity
 
+	float m_massDensity;
+	float m_pressure;
+
 	particle* next;
 };
 
@@ -85,6 +90,7 @@ pVec pSys;
 particle particles[kParticlesCount];
 particle* grid[kCellCount][kCellCount];
 
+std::vector<point> drawablePoints;
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -112,13 +118,14 @@ int main () {
   const GLubyte* version = glGetString (GL_VERSION); // version as a string
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
-  //particlesInit();
+  particlesInit();
+  createDrawablePoints();
   glInit();
 
   while (!glfwWindowShouldClose (window)) 
   {
 
-    advance();
+    //advance();
 
     render();
     
@@ -150,20 +157,32 @@ void advance()
 
 }
 
+void createDrawablePoints()
+{
+	drawablePoints.reserve(kParticlesCount);
+	for(int i = 0; i < kParticlesCount; ++i)
+	{
+		point p;
+		p.x = particles[i].m_x;
+		p.y = particles[i].m_y;
+		drawablePoints[i] = p;
+	}
+}
+
 void render()
 {
     
 	vbo = 0;
     glGenBuffers (1, &vbo);
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glBufferData (GL_ARRAY_BUFFER, kParticlesCount * sizeof(particle), &particles[0], GL_STATIC_DRAW);
+    glBufferData (GL_ARRAY_BUFFER, kParticlesCount * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
 
     vao = 0;
     glGenVertexArrays (1, &vao);
     glBindVertexArray (vao);
     glEnableVertexAttribArray (0);
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer (0, 4, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
     glClear (GL_COLOR_BUFFER_BIT);
     glBindVertexArray (vao);
@@ -182,18 +201,22 @@ void render()
     glPointSize(5.0f);
 
     // draw points from the currently bound VAO with current in-use shader
-    glDrawArrays (GL_POINTS, 0, pSys.size());
+    glDrawArrays (GL_POINTS, 0, kParticlesCount);
 }
 
-/**
-* just distribute particles randomly in [-1,1] with random velocities
-*/
+
 void particlesInit()
 {
-	//PRNG (c++11)
-  std::mt19937 eng((std::random_device())());
-  std::uniform_real_distribution<> pos_dist(-1,1);
-  std::uniform_real_distribution<> vel_dist(-0.3,0.3);
+
+  for(int particleIndexRow = 0; particleIndexRow < 32; ++particleIndexRow)
+  {
+	  float stepLength = 1.0f/32.0f;
+	  for(int particleIndexCol = 0; particleIndexCol < 32; ++particleIndexCol)
+	  {
+		  particles[particleIndexCol + 32*particleIndexRow].m_x = -0.98f + particleIndexCol*stepLength;
+		  particles[particleIndexCol + 32*particleIndexRow].m_y = -0.98f + particleIndexRow*stepLength;
+	  }
+  }
 }
 
 void updateGrid()
