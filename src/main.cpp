@@ -48,11 +48,11 @@ const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.0f;
+const float damp = 0.2f;
 
 float particleMass;
 
-float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x) 
+float surfaceLimit = 7.0f;	// defined as sqrt(restDensity/x) 
 							// where x is average particle sum in kernel
 float accelerationX;
 float accelerationY;
@@ -369,6 +369,7 @@ void loopStructure()
 		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
 		if(normalLenght > surfaceLimit){
 			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
+			surfaceTensionForcey = - surfaceTension  * gradNormal * (normaly/normalLenght);
 		}
 		pressureForcex = -mdi * pressureForcex;
 		pressureForcey = -mdi * pressureForcey;
@@ -435,7 +436,7 @@ void loopStructure()
 
 			pi.m_y = cp + d*n;
 			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
-			std::cout << "vu= " << pi.m_u << std::endl;
+
 		}
 		
 		if(pi.m_y > 1)
