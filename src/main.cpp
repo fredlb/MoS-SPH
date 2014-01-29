@@ -25,7 +25,7 @@ void particlesInit();
 void drawGrid();
 void updateGrid();
 void createDrawablePoints();
-
+void loopStructure();
 
 float calculateMass();
 
@@ -137,9 +137,12 @@ int main () {
 
   while (!glfwWindowShouldClose (window)) 
   {
+
 	  updateGrid();
+
 	  createDrawablePoints();
       render();
+	  loopStructure();
 
 	  glfwPollEvents ();
       // put the stuff we've been drawing onto the display
@@ -158,19 +161,11 @@ void glInit()
     glUseProgram (programID);
 }
 
-void advance()
-{
-  for(int i = 0; i < kParticlesCount; i++)
-  {
-    //pSys[i].update(kDt);
 
-  }
-    //std::cout << "x: " << pSys[0].m_x << " y: " << pSys[0].m_y << " u: " << pSys[0].m_u << "  v: " << pSys[0].m_v << std::endl;
-
-}
 
 void createDrawablePoints()
 {
+	drawablePoints.clear();
 	drawablePoints.reserve(kParticlesCount);
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
@@ -233,7 +228,7 @@ void particlesInit()
 
 void updateGrid()
 {
-	memset(grid, 0, kCellCount*sizeof(particle*));
+	memset(grid, 0, 400*sizeof(particle*));
 
 	for(size_t i = 0; i < kParticlesCount; i++)
 	{
@@ -284,6 +279,7 @@ void loopStructure()
 				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
 					//do fancy math
+					//std::cout << "ppj x: " << ppj->m_x << std::endl;
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
@@ -478,9 +474,12 @@ float calculateMass()
 				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
 					const particle& pj = *ppj;
+					//std::cout << "pi x:" << pi.m_x << std::endl;
 
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
+					//std::cout << "pj x:" << pj.m_x << std::endl;
+					float dx = pi.m_x - pj.m_x;
+					//std::cout << "dx: " << dx << std::endl;
+					float dy = pi.m_y - pj.m_y;
 					float distance2 = dx*dx + dy*dy;
 					if(distance2 < interactionRadius*interactionRadius)
 					{
