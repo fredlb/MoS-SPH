@@ -434,7 +434,7 @@ void loopStructure()
 			pi.m_v = u - (1 + damp/(kDt*sqrt(u*u+y*y)))*(u*n)*n;
 		}
 		
-		if(pi.m_x > 1)
+		if(pi.m_y > 1)
 		{
 			current = pi.m_y;
 			u = pi.m_v;
