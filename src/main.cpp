@@ -48,12 +48,13 @@ const float viscosityConstant = 3.5f;
 
 float surfaceLimit = 0.0f;	// defined as sqrt(restDensity/x) 
 							// where x is average particle sum in kernel
+float accelerationX;
+float accelerationY;
 
 //Bör vara en del av particle structen så att man kommer åt "partikel j"
 float massDensityArray[kParticlesCount]; 
 float pressureArray[kParticlesCount];
-float forceX[kParticlesCount];
-float forceY[kParticlesCount];
+
 
 //Every force
 float	pressureForcex,	pressureForcey,	viscosityForcex,
@@ -239,12 +240,12 @@ void loopStructure()
 		int x = pi.m_x/cellSize;
 		int y = pi.m_y/cellSize;
 
+		float massDensity = 0.0;
 		//loop over cells 
 		for(size_t gx = x-1; gx < x+1; gx++)
 		{
 			for(size_t gy = y-1; gy < y+1; gy++)
 			{
-				float massDensity = 0.0;
 				//loop over neighbors
 				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
 				{
@@ -259,12 +260,12 @@ void loopStructure()
 						massDensity += kParticleMass*Wdeafult(distance2);
 					}
 				}
-				//save massDensity
-				massDensityArray[i] = massDensity;
-				//save Pressure
-				pressureArray[i] = kstiffnes * (massDensity - restDensity);
 			}
 		}
+		//save massDensity
+		massDensityArray[i] = massDensity;
+		//save Pressure
+		pressureArray[i] = kstiffnes * (massDensity - restDensity);
 	}
 
 
@@ -275,22 +276,22 @@ void loopStructure()
 		int x = pi.m_x/cellSize;
 		int y = pi.m_y/cellSize;
 
+		pressureForcex = 0.0f; 
+		pressureForcey = 0.0f;
+		viscosityForcex = 0.0f;
+		viscosityForcey = 0.0f;
+		normalx = 0.0f;
+		normaly = 0.0f;
+		gradNormal = 0.0f;
+		surfaceTensionForcex = 0.0f;
+		surfaceTensionForcey = 0.0f;
+		gravity = g*massDensityArray[i];
+
 		//loop over cells 
 		for(size_t gx = x-1; gx < x+1; gx++)
 		{
 			for(size_t gy = y-1; gy < y+1; gy++)
 			{
-				pressureForcex = 0.0f; 
-				pressureForcey = 0.0f;
-				viscosityForcex = 0.0f;
-				viscosityForcey = 0.0f;
-				normalx = 0.0f;
-				normaly = 0.0f;
-				gradNormal = 0.0f;
-				surfaceTensionForcex = 0.0f;
-				surfaceTensionForcey = 0.0f;
-				gravity = g*massDensityArray[i];
-
 				//loop over neighbors
 				for (particle* ppj=grid[gx][gy]; NULL!=ppj; ppj=ppj->next)
 				{
@@ -322,20 +323,23 @@ void loopStructure()
 						}
 					}
 				}
-				float normalLenght = sqrt(normalx*normalx + normaly*normaly);
-				if(normalLenght > surfaceLimit){
-					surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
-				}
-				pressureForcex = -massDensityArray[i] * pressureForcex;
-				pressureForcey = -massDensityArray[i] * pressureForcey;
-
-				viscosityForcex = viscosityConstant*viscosityForcex;
-				viscosityForcey = viscosityConstant*viscosityForcey;
-
-				forceX[i] = pressureForcex + viscosityForcex + surfaceTensionForcex;
-				forceY[i] = pressureForcex + viscosityForcey + surfaceTensionForcey + gravity;
 			}
 		}
+
+		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
+		if(normalLenght > surfaceLimit){
+			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
+		}
+		pressureForcex = -massDensityArray[i] * pressureForcex;
+		pressureForcey = -massDensityArray[i] * pressureForcey;
+		
+		viscosityForcex = viscosityConstant*viscosityForcex;
+		viscosityForcey = viscosityConstant*viscosityForcey;
+		
+		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/massDensityArray[i];
+		accelerationY = (pressureForcex + viscosityForcey + surfaceTensionForcey + gravity)/massDensityArray[i];
+		
+		//Time integration
 	}
 }
 
@@ -353,7 +357,7 @@ float Wdeafult(float distance2)
 
 float* WgradPressure(float dx, float dy)
 {
-	float* W;
+	float W[2];
 	float distance2 = dx*dx + dy*dy;
 	
 	W[0] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
@@ -370,7 +374,7 @@ float WlaplacianViscosity(float distance2)
 
 float* WgradDefult(float dx, float dy)
 {
-	float* W;
+	float W[2];
 	float distance2 = dx*dx + dy*dy;
 
 	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
