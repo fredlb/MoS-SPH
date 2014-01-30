@@ -17,11 +17,13 @@
 #define kWindowHeight 480
 #define kPi 3.14159265359
 #define g -9.81
-
+#define kFrameRate 60
+#define kSubSteps 3
+//#define kDt ((1.0f/kFrameRate) / kSubSteps)
 
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.05f
+#define interactionRadius 0.1f
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -32,6 +34,7 @@ void drawGrid();
 void updateGrid();
 void createDrawablePoints();
 void loopStructure();
+void integrate();
 
 float calculateMass();
 
@@ -48,12 +51,15 @@ unsigned int shader_programme;
 const float kViewScale =  2.0f;
 //const float interactionRadius =  0.05f;
 //const float cellSize = 2*interactionRadius;
-const float kDt = 0.001f;
+
+
+
+const float kDt = 0.0005f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
-const float viscosityConstant = 3.5f;
+const float viscosityConstant = 7.5f;
 const float damp = 0.2f;
 
 float particleMass;
@@ -148,13 +154,40 @@ int main () {
   std::cout << "cellSize: " << cellSize << std::endl;
   std::cout << "grid cell count: " << kGridCellCount << std::endl;
   std::cout << "kgridwidth: " << kGridWidth << std::endl;
+  std::cout << "kDt: " << kDt << std::endl;
+
+
+  double t = 0.0;
+  double currentTime = glfwGetTime();
+  double accumulator = 0.0;
+
+
+
+
 
   while (!glfwWindowShouldClose (window)) 
   {
-	  updateGrid();
-	  loopStructure();
+	  double newTime = glfwGetTime();
+
+	  double frameTime = newTime - currentTime;
+	  currentTime = newTime;
+
+	  accumulator += frameTime;
+
+	  
+	  //while(accumulator >= kDt)
+	  for(int i = 0; i < kSubSteps; ++i)
+	  {
+		  updateGrid();
+		  loopStructure();
+		  //integrate();
+
+		  accumulator -= kDt;
+		  t += kDt;
+	  }
+
 	  createDrawablePoints();
-      render();
+	  render();
 
 	  glfwPollEvents ();
       // put the stuff we've been drawing onto the display
@@ -421,39 +454,15 @@ void loopStructure()
 		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
 		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
 
+		pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
+		pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
 
 
-		//Time integration
-		//Sebastian Superior integration
-		
-		/*if(t == 0)
-		{
-			pi.m_u += pi.m_u + 0.5*kDt*accelerationX;
-			pi.m_v += pi.m_v + 0.5*kDt*accelerationY;
+		pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
+		pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
 
-			pi.m_x += kDt*pi.m_u;
-			pi.m_y += kDt*pi.m_v;
-		}else
-		{*/
-		/*
-			pi.m_x += kDt*pi.m_u;
-			pi.m_y += kDt*pi.m_v;
-			pi.m_u += kDt*accelerationX;
-			pi.m_v += kDt*accelerationY;
-			*/
-			
-			pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
-			pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
-
-
-			pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
-			pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
-
-			prevAcceleration[i].x = accelerationX;
-			prevAcceleration[i].y = accelerationY;
-			
-
-		//}
+		prevAcceleration[i].x = accelerationX;
+		prevAcceleration[i].y = accelerationY;
 
 		//Colision handling and response
 		float current,cp,d,n,u,v;
@@ -498,7 +507,7 @@ void loopStructure()
 			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
 
 		}
-		
+
 		if(pi.m_y > 1)
 		{
 			current = pi.m_y;
@@ -514,6 +523,23 @@ void loopStructure()
 		}
 
 	}
+}
+
+/*void integrate()
+{
+	for (int i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+
+		
+
+
+	}
+}*/
+
+void collisionResponse()
+{
+
 }
 
 float calculateMass()
