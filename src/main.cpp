@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <random>
+#include <algorithm>
 
 #include "particles.h"
 #include "shader.h"
@@ -17,6 +18,11 @@
 #define kPi 3.14159265359
 #define g -9.81
 
+
+#define averageParticles 20
+//#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
+#define interactionRadius 0.05f
+#define cellSize (2.0f*interactionRadius)
 
 void advance();
 void render();
@@ -40,19 +46,19 @@ unsigned int vbo;
 unsigned int shader_programme;
 
 const float kViewScale =  2.0f;
-const float interactionRadius =  0.1f;
-const float cellSize = interactionRadius;
+//const float interactionRadius =  0.05f;
+//const float cellSize = 2*interactionRadius;
 const float kDt = 0.001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.2f;
+const float damp = 0.0f;
 
 float particleMass;
 
-float surfaceLimit = 7.0f;	// defined as sqrt(restDensity/x) 
+float surfaceLimit = sqrt(restDensity/averageParticles);	// defined as sqrt(restDensity/x) 
 							// where x is average particle sum in kernel
 float accelerationX;
 float accelerationY;
@@ -93,11 +99,15 @@ const size_t kGridWidth = (size_t)(2.0 / cellSize);
 const size_t kGridHeight = (size_t)(2.0 / cellSize);
 const size_t kGridCellCount = kGridWidth * kGridHeight;
 size_t gridCoords[kParticlesCount*2];
-particle* grid[400];
+std::vector<particle*> grid;
 
 
 
 std::vector<point> drawablePoints;
+std::vector<point> DEBUG_CORNER;
+
+point prevAcceleration[kParticlesCount];
+
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -125,7 +135,7 @@ int main () {
   const GLubyte* version = glGetString (GL_VERSION); // version as a string
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
-
+  grid.reserve(kGridCellCount);
   particlesInit();
 
   updateGrid();
@@ -134,12 +144,15 @@ int main () {
 
   glInit();
 
+  std::cout << "interaction radius: " << interactionRadius << std::endl;
+  std::cout << "cellSize: " << cellSize << std::endl;
+  std::cout << "grid cell count: " << kGridCellCount << std::endl;
+  std::cout << "kgridwidth: " << kGridWidth << std::endl;
 
   while (!glfwWindowShouldClose (window)) 
   {
 	  updateGrid();
 	  loopStructure();
-
 	  createDrawablePoints();
       render();
 
@@ -158,6 +171,33 @@ void glInit()
 {
     GLuint programID = LoadShader( "default.vert", "flat.frag" );
     glUseProgram (programID);
+
+
+	point topleft;
+	point topright;
+	point bottomleft;
+	point bottomright;
+	
+	topleft.x = -1.0f;
+	topleft.y = 1.0f;
+
+	topright.x = 1.0f;
+	topright.y = 1.0f;
+
+	bottomleft.x = -1.0f;
+	bottomleft.y = -1.0f;
+
+	bottomright.x = 1.0f;
+	bottomright.y = -1.0f;
+
+	DEBUG_CORNER.push_back(topleft);
+	DEBUG_CORNER.push_back(topright);
+	DEBUG_CORNER.push_back(bottomleft);
+	DEBUG_CORNER.push_back(bottomright);
+
+
+
+
 }
 
 
@@ -177,6 +217,7 @@ void createDrawablePoints()
 
 void render()
 {
+
     
 	vbo = 0;
     glGenBuffers (1, &vbo);
@@ -227,7 +268,7 @@ void particlesInit()
 
 void updateGrid()
 {
-	memset(grid, 0, 400*sizeof(particle*));
+	memset(&grid[0], 0, kGridCellCount*sizeof(particle*));
 
 	for(size_t i = 0; i < kParticlesCount; i++)
 	{
@@ -379,6 +420,9 @@ void loopStructure()
 		
 		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
 		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
+
+
+
 		//Time integration
 		//Sebastian Superior integration
 		
@@ -391,11 +435,24 @@ void loopStructure()
 			pi.m_y += kDt*pi.m_v;
 		}else
 		{*/
-			pi.m_u += kDt*accelerationX;
-			pi.m_v += kDt*accelerationY;
-
+		/*
 			pi.m_x += kDt*pi.m_u;
 			pi.m_y += kDt*pi.m_v;
+			pi.m_u += kDt*accelerationX;
+			pi.m_v += kDt*accelerationY;
+			*/
+			
+			pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
+			pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
+
+
+			pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
+			pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
+
+			prevAcceleration[i].x = accelerationX;
+			prevAcceleration[i].y = accelerationY;
+			
+
 		//}
 
 		//Colision handling and response
@@ -467,6 +524,9 @@ float calculateMass()
 
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		
+		prevAcceleration[i].x = 0.0f;
+		prevAcceleration[i].y = 0.0f;
 
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
