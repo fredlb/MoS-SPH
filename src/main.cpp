@@ -61,6 +61,10 @@ const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 7.5f;
 const float damp = 0.2f;
+bool first = true;
+
+float vhx[kParticlesCount];
+float vhy[kParticlesCount];
 
 float particleMass;
 
@@ -454,6 +458,30 @@ void loopStructure()
 		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
 		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
 
+		//True leap-frog
+		if(first){
+			vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
+			vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
+			
+			pi.m_u += accelerationX*kDt;
+			pi.m_v += accelerationY*kDt;
+
+			pi.m_x += vhx[i]*kDt;
+			pi.m_y += vhy[i]*kDt;
+
+			first = false;
+		}else{
+			vhx[i] += accelerationX*kDt;
+			vhy[i] += accelerationY*kDt;
+			
+			pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
+			pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
+
+			pi.m_x += vhx[i]*kDt;
+			pi.m_y += vhy[i]*kDt;
+		}
+
+		/* Fredriks inferior leap-frog
 		pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
 		pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
 
@@ -463,7 +491,7 @@ void loopStructure()
 
 		prevAcceleration[i].x = accelerationX;
 		prevAcceleration[i].y = accelerationY;
-
+		*/
 		//Colision handling and response
 		float current,cp,d,n,u,v;
 		if(pi.m_x < -1)
