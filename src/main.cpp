@@ -54,7 +54,7 @@ const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.0f;
+const float damp = 0.2f;
 
 float particleMass;
 
@@ -456,57 +456,61 @@ void loopStructure()
 		//}
 
 		//Colision handling and response
-		float current,cp,d,n,u;
+		float current,cp,d,n,u,v;
 		if(pi.m_x < -1)
 		{
 			current = pi.m_x;
 			u = pi.m_u;
+			v = pi.m_v;
 			cp = -1;
 
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
 		}
 
 		if(pi.m_x > 1)
 		{
 			current = pi.m_x;
 			u = pi.m_u;
+			v = pi.m_v;
 			cp = 1;
 
 			d = sqrt((cp-current)*(cp-current));
 			n = -1;
 
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
 		}
 
 		if(pi.m_y < -1)
 		{
 			current = pi.m_y;
-			u = pi.m_v;
+			v = pi.m_v;
+			u = pi.m_u;
 			cp = -1;
 
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
 
 		}
 		
 		if(pi.m_y > 1)
 		{
 			current = pi.m_y;
-			u = pi.m_v;
+			u = pi.m_u;
+			v = pi.m_v;
 			cp = 1;
 
 			d = sqrt((cp-current)*(cp-current));
 			n = -1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u))))*(u*n)*n;
+			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
 		}
 
 	}
