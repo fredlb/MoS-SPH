@@ -480,7 +480,7 @@ void loopStructure()
 			pi.m_x += vhx[i]*kDt;
 			pi.m_y += vhy[i]*kDt;
 		}
-
+		
 		/* Fredriks inferior leap-frog
 		pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
 		pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
@@ -504,7 +504,8 @@ void loopStructure()
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhy[i] = v;
 		}
 
 		if(pi.m_x > 1)
@@ -518,7 +519,8 @@ void loopStructure()
 			n = -1;
 
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhy[i] = v;
 		}
 
 		if(pi.m_y < -1)
@@ -532,7 +534,8 @@ void loopStructure()
 			n = 1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+			vhx[i] = u;
 
 		}
 
@@ -547,7 +550,8 @@ void loopStructure()
 			n = -1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+			vhx[i] = u;
 		}
 
 	}
