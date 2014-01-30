@@ -18,12 +18,15 @@
 #define kPi 3.14159265359
 #define g -9.81
 #define kFrameRate 60
-#define kSubSteps 3
+#define kSubSteps 7
+
+#define kOffset 0.5f
+
 //#define kDt ((1.0f/kFrameRate) / kSubSteps)
 
 #define averageParticles 20
-//#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.1f
+#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
+//#define interactionRadius 0.05f
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -35,6 +38,7 @@ void updateGrid();
 void createDrawablePoints();
 void loopStructure();
 void integrate();
+void calulateForces();
 
 float calculateMass();
 
@@ -54,12 +58,12 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.0005f;
+const float kDt = 0.0001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
-const float viscosityConstant = 7.5f;
+const float viscosityConstant = 3.5f;
 const float damp = 0.2f;
 
 float particleMass;
@@ -95,12 +99,8 @@ struct point
 	float y;
 };
 
-typedef std::vector<particle> pVec;
-pVec pSys;
 
 particle particles[kParticlesCount];
-//particle* grid[kCellCount][kCellCount];
-
 const size_t kGridWidth = (size_t)(2.0 / cellSize);
 const size_t kGridHeight = (size_t)(2.0 / cellSize);
 const size_t kGridCellCount = kGridWidth * kGridHeight;
@@ -112,6 +112,7 @@ std::vector<particle*> grid;
 std::vector<point> drawablePoints;
 std::vector<point> DEBUG_CORNER;
 
+point acceleration[kParticlesCount];
 point prevAcceleration[kParticlesCount];
 
 
@@ -141,10 +142,11 @@ int main () {
   const GLubyte* version = glGetString (GL_VERSION); // version as a string
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
+  
   grid.reserve(kGridCellCount);
   particlesInit();
-
   updateGrid();
+
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
 
@@ -161,10 +163,6 @@ int main () {
   double currentTime = glfwGetTime();
   double accumulator = 0.0;
 
-
-
-
-
   while (!glfwWindowShouldClose (window)) 
   {
 	  double newTime = glfwGetTime();
@@ -180,7 +178,8 @@ int main () {
 	  {
 		  updateGrid();
 		  loopStructure();
-		  //integrate();
+		  calulateForces();
+		  integrate();
 
 		  accumulator -= kDt;
 		  t += kDt;
@@ -202,7 +201,7 @@ int main () {
 
 void glInit()
 {
-    GLuint programID = LoadShader( "default.vert", "flat.frag" );
+    GLuint programID = LoadShader( "src/default.vert", "src/flat.frag" );
     glUseProgram (programID);
 
 
@@ -288,13 +287,18 @@ void render()
 void particlesInit()
 {
 
-  for(int particleIndexRow = 0; particleIndexRow < 32; ++particleIndexRow)
+	std::mt19937 eng((std::random_device())());
+	std::uniform_real_distribution<> pos_dist(-0.01,0.01);
+
+	int rowcolSize = sqrt(kParticlesCount);
+
+  for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
   {
-	  float stepLength = 1.0f/32.0f;
-	  for(int particleIndexCol = 0; particleIndexCol < 32; ++particleIndexCol)
+	  float stepLength = 1.0f/rowcolSize;
+	  for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 	  {
-		  particles[particleIndexCol + 32*particleIndexRow].m_x = -0.98f + particleIndexCol*stepLength;
-		  particles[particleIndexCol + 32*particleIndexRow].m_y = -0.98f + particleIndexRow*stepLength;
+		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_x = -kOffset + particleIndexCol*stepLength + pos_dist(eng);
+		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_y = -kOffset + particleIndexRow*stepLength + pos_dist(eng);
 	  }
   }
 }
@@ -329,6 +333,94 @@ void updateGrid()
 	}
 }
 
+void calulateForces()
+{
+	//Force loop
+	for(size_t i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
+
+		pressureForcex = 0.0f; 
+		pressureForcey = 0.0f;
+		viscosityForcex = 0.0f;
+		viscosityForcey = 0.0f;
+		normalx = 0.0f;
+		normaly = 0.0f;
+		gradNormal = 0.0f;
+		surfaceTensionForcex = 0.0f;
+		surfaceTensionForcey = 0.0f;
+
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
+
+		float mdi = pi.m_massDensity;
+		float mdj = 0.0f;
+		gravity = g*mdi;
+		//loop over cells 
+		for (size_t ni=gi-1; ni<=gi+1; ++ni)
+		{
+			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
+			{
+				//loop over neighbors
+				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
+				{
+					float dx = pi.m_x - ppj->m_x;
+					float dy = pi.m_y - ppj->m_y;
+					float distance2 = dx*dx + dy*dy;
+					if(distance2 < interactionRadius*interactionRadius)
+					{
+						float* Wnormal = WgradDefult(dx, dy);
+						mdj = ppj->m_massDensity;
+						//std::cout <<"W[0] = " << Wnormal[0] << std::endl;
+						//std::cout <<"W[1] = " << Wnormal[1] << std::endl;
+
+						normalx += (particleMass/mdj)*Wnormal[0];
+						normaly += (particleMass/mdj)*Wnormal[1];
+
+						gradNormal += (particleMass/mdj)*WlaplacianDefult(distance2);
+
+						if( distance2 != 0)
+						{
+							float* W = WgradPressure(dx,dy);
+							// uj - ui
+							float velocityDiffu = ppj->m_u - pi.m_u;
+							float velocityDiffv = ppj->m_v - pi.m_v;
+
+							float pressi = pi.m_pressure;
+							float pressj = ppj->m_pressure;
+							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[0];
+							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
+
+							viscosityForcex += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
+							viscosityForcey += velocityDiffv * (particleMass/mdj) * WlaplacianViscosity(distance2);
+
+						}
+					}
+				}
+			}
+		}
+
+		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
+		if(normalLenght > surfaceLimit){
+			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
+			surfaceTensionForcey = - surfaceTension  * gradNormal * (normaly/normalLenght);
+		}
+		pressureForcex = -mdi * pressureForcex;
+		pressureForcey = -mdi * pressureForcey;
+
+		viscosityForcex = viscosityConstant*viscosityForcex;
+		viscosityForcey = viscosityConstant*viscosityForcey;
+
+		acceleration[i].x = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
+		acceleration[i].y = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
+
+	}
+
+		
+}
 
 void loopStructure()
 {
@@ -372,97 +464,24 @@ void loopStructure()
 	}
 
 
-	//Force loop
-	for(size_t i = 0; i < kParticlesCount; ++i)
+	
+}
+
+void integrate()
+{
+	for (int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
 
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		pressureForcex = 0.0f; 
-		pressureForcey = 0.0f;
-		viscosityForcex = 0.0f;
-		viscosityForcey = 0.0f;
-		normalx = 0.0f;
-		normaly = 0.0f;
-		gradNormal = 0.0f;
-		surfaceTensionForcex = 0.0f;
-		surfaceTensionForcey = 0.0f;
-		
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		float mdi = pi.m_massDensity;
-		float mdj = 0.0f;
-		gravity = g*mdi;
-		//loop over cells 
-		for (size_t ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-				{
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
-					float distance2 = dx*dx + dy*dy;
-					if(distance2 < interactionRadius*interactionRadius)
-					{
-						float* Wnormal = WgradDefult(dx, dy);
-						mdj = ppj->m_massDensity;
-						//std::cout <<"W[0] = " << Wnormal[0] << std::endl;
-						//std::cout <<"W[1] = " << Wnormal[1] << std::endl;
-
-						normalx += (particleMass/mdj)*Wnormal[0];
-						normaly += (particleMass/mdj)*Wnormal[1];
-
-						gradNormal += (particleMass/mdj)*WlaplacianDefult(distance2);
-						
-						if( distance2 != 0)
-						{
-							float* W = WgradPressure(dx,dy);
-							// uj - ui
-							float velocityDiffu = ppj->m_u - pi.m_u;
-							float velocityDiffv = ppj->m_v - pi.m_v;
-
-							float pressi = pi.m_pressure;
-							float pressj = ppj->m_pressure;
-							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[0];
-							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
-							
-							viscosityForcex += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
-							viscosityForcey += velocityDiffv * (particleMass/mdj) * WlaplacianViscosity(distance2);
-							
-						}
-					}
-				}
-			}
-		}
-
-		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
-		if(normalLenght > surfaceLimit){
-			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
-			surfaceTensionForcey = - surfaceTension  * gradNormal * (normaly/normalLenght);
-		}
-		pressureForcex = -mdi * pressureForcex;
-		pressureForcey = -mdi * pressureForcey;
-		
-		viscosityForcex = viscosityConstant*viscosityForcex;
-		viscosityForcey = viscosityConstant*viscosityForcey;
-		
-		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
-
-		pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
-		pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
+		pi.m_x += pi.m_u*kDt + 0.5*acceleration[i].x*kDt*kDt;
+		pi.m_y += pi.m_v*kDt + 0.5*acceleration[i].y*kDt*kDt;
 
 
-		pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
-		pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
+		pi.m_u += 0.5*(acceleration[i].x + prevAcceleration[i].x)*kDt;
+		pi.m_v += 0.5*(acceleration[i].y + prevAcceleration[i].y)*kDt;
 
-		prevAcceleration[i].x = accelerationX;
-		prevAcceleration[i].y = accelerationY;
+		prevAcceleration[i].x = acceleration[i].x;
+		prevAcceleration[i].y = acceleration[i].y;
 
 		//Colision handling and response
 		float current,cp,d,n,u,v;
@@ -523,19 +542,8 @@ void loopStructure()
 		}
 
 	}
-}
-
-/*void integrate()
-{
-	for (int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
 		
-
-
-	}
-}*/
+}
 
 void collisionResponse()
 {
@@ -557,6 +565,9 @@ float calculateMass()
 		
 		prevAcceleration[i].x = 0.0f;
 		prevAcceleration[i].y = 0.0f;
+
+		acceleration[i].x = 0.0f;
+		acceleration[i].y = 0.0f;
 
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
@@ -631,12 +642,3 @@ float WlaplacianDefult(float distance2)
 	float W = -(945/(32*kPi*pow(interactionRadius,9)))*(pow(interactionRadius,2)-distance2)*(3*pow(interactionRadius,2)-7*distance2);
 	return W;
 }
-
-/*
-float distance2(particle* currentParticle, particle* neighbour)
-{
-	// |ri - rj|^2
-	return (currentParticle->m_x - neighbour->m_x)*(currentParticle->m_x - neighbour->m_x) +
-		(currentParticle->m_y - neighbour->m_y)*(currentParticle->m_y - neighbour->m_y);
-}
-*/
