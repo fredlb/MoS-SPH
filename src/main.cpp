@@ -25,8 +25,8 @@
 //#define kDt ((1.0f/kFrameRate) / kSubSteps)
 
 #define averageParticles 20
-#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-//#define interactionRadius 0.05f
+//#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
+#define interactionRadius 0.1f
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -61,7 +61,7 @@ const float kViewScale =  2.0f;
 const float kDt = 0.0001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
-const int kstiffnes = 20;
+const int kstiffnes = 50;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
 const float damp = 0.2f;
@@ -114,6 +114,9 @@ std::vector<point> DEBUG_CORNER;
 
 point acceleration[kParticlesCount];
 point prevAcceleration[kParticlesCount];
+float vhx[kParticlesCount];
+float vhy[kParticlesCount];
+bool firstIteration = true;
 
 
 int main () {
@@ -165,12 +168,12 @@ int main () {
 
   while (!glfwWindowShouldClose (window)) 
   {
-	  double newTime = glfwGetTime();
+	  /*double newTime = glfwGetTime();
 
 	  double frameTime = newTime - currentTime;
 	  currentTime = newTime;
 
-	  accumulator += frameTime;
+	  accumulator += frameTime;*/
 
 	  
 	  //while(accumulator >= kDt)
@@ -179,10 +182,10 @@ int main () {
 		  updateGrid();
 		  loopStructure();
 		  calulateForces();
-		  integrate();
+		  //integrate();
 
-		  accumulator -= kDt;
-		  t += kDt;
+		  //accumulator -= kDt;
+		  //t += kDt;
 	  }
 
 	  createDrawablePoints();
@@ -288,7 +291,7 @@ void particlesInit()
 {
 
 	std::mt19937 eng((std::random_device())());
-	std::uniform_real_distribution<> pos_dist(-0.01,0.01);
+	std::uniform_real_distribution<> pos_dist(-0.001,0.001);
 
 	int rowcolSize = sqrt(kParticlesCount);
 
@@ -297,8 +300,8 @@ void particlesInit()
 	  float stepLength = 1.0f/rowcolSize;
 	  for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 	  {
-		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_x = -kOffset + particleIndexCol*stepLength + pos_dist(eng);
-		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_y = -kOffset + particleIndexRow*stepLength + pos_dist(eng);
+		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_x = -kOffset + particleIndexCol*stepLength; // + pos_dist(eng);
+		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_y = -kOffset + particleIndexRow*stepLength; // + pos_dist(eng);
 	  }
   }
 }
@@ -414,8 +417,105 @@ void calulateForces()
 		viscosityForcex = viscosityConstant*viscosityForcex;
 		viscosityForcey = viscosityConstant*viscosityForcey;
 
-		acceleration[i].x = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-		acceleration[i].y = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
+		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
+		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
+
+		//True leap-frog
+                if(firstIteration){
+                        vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
+                        vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
+                        
+                        pi.m_u += accelerationX*kDt;
+                        pi.m_v += accelerationY*kDt;
+
+                        pi.m_x += vhx[i]*kDt;
+                        pi.m_y += vhy[i]*kDt;
+
+                        firstIteration = false;
+                }else{
+                        vhx[i] += accelerationX*kDt;
+                        vhy[i] += accelerationY*kDt;
+                        
+                        pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
+                        pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
+
+                        pi.m_x += vhx[i]*kDt;
+                        pi.m_y += vhy[i]*kDt;
+                }
+                
+                /* Fredriks inferior leap-frog
+                pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
+                pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
+
+
+                pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
+                pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
+
+                prevAcceleration[i].x = accelerationX;
+                prevAcceleration[i].y = accelerationY;
+                */
+                //Colision handling and response
+                float current,cp,d,n,u,v;
+                if(pi.m_x < -1)
+                {
+                        current = pi.m_x;
+                        u = pi.m_u;
+                        v = pi.m_v;
+                        cp = -1;
+
+                        d = sqrt((cp-current)*(cp-current));
+                        n = 1;
+                        pi.m_x = cp + d*n;
+                        vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+                        vhy[i] = v;
+                }
+
+                if(pi.m_x > 1)
+                {
+                        current = pi.m_x;
+                        u = pi.m_u;
+                        v = pi.m_v;
+                        cp = 1;
+
+                        d = sqrt((cp-current)*(cp-current));
+                        n = -1;
+
+                        pi.m_x = cp + d*n;
+                        vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+                        vhy[i] = v;
+                }
+
+                if(pi.m_y < -1)
+                {
+                        current = pi.m_y;
+                        v = pi.m_v;
+                        u = pi.m_u;
+                        cp = -1;
+
+                        d = sqrt((cp-current)*(cp-current));
+                        n = 1;
+
+                        pi.m_y = cp + d*n;
+                        vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+                        vhx[i] = u;
+
+                }
+				/*
+                if(pi.m_y > 1)
+                {
+                        current = pi.m_y;
+                        u = pi.m_u;
+                        v = pi.m_v;
+                        cp = 1;
+
+                        d = sqrt((cp-current)*(cp-current));
+                        n = -1;
+
+                        pi.m_y = cp + d*n;
+                        vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+                        vhx[i] = u;
+                }*/
+
 
 	}
 
@@ -473,6 +573,30 @@ void integrate()
 	{
 		particle& pi = particles[i];
 
+		//True leap-frog
+		if(firstIteration){
+			vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
+			vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
+
+			pi.m_u += accelerationX*kDt;
+			pi.m_v += accelerationY*kDt;
+
+			pi.m_x += vhx[i]*kDt;
+			pi.m_y += vhy[i]*kDt;
+
+			firstIteration = false;
+		}else{
+			vhx[i] += accelerationX*kDt;
+			vhy[i] += accelerationY*kDt;
+
+			pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
+			pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
+
+			pi.m_x += vhx[i]*kDt;
+			pi.m_y += vhy[i]*kDt;
+		}
+
+		/*
 		pi.m_x += pi.m_u*kDt + 0.5*acceleration[i].x*kDt*kDt;
 		pi.m_y += pi.m_v*kDt + 0.5*acceleration[i].y*kDt*kDt;
 
@@ -482,7 +606,7 @@ void integrate()
 
 		prevAcceleration[i].x = acceleration[i].x;
 		prevAcceleration[i].y = acceleration[i].y;
-
+		*/
 		//Colision handling and response
 		float current,cp,d,n,u,v;
 		if(pi.m_x < -1)
@@ -495,7 +619,8 @@ void integrate()
 			d = sqrt((cp-current)*(cp-current));
 			n = 1;
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhy[i] = v;
 		}
 
 		if(pi.m_x > 1)
@@ -509,9 +634,10 @@ void integrate()
 			n = -1;
 
 			pi.m_x = cp + d*n;
-			pi.m_u = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
+			vhy[i] = v;
 		}
-
+		/*
 		if(pi.m_y < -1)
 		{
 			current = pi.m_y;
@@ -523,10 +649,11 @@ void integrate()
 			n = 1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+			vhx[i] = u;
 
-		}
-
+		}*/
+		/*
 		if(pi.m_y > 1)
 		{
 			current = pi.m_y;
@@ -538,9 +665,10 @@ void integrate()
 			n = -1;
 
 			pi.m_y = cp + d*n;
-			pi.m_v = u - (1 + damp*(d/(kDt*sqrt(u*u + v*v))))*(u*n)*n;
+			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
+			vhx[i] = u;
 		}
-
+		*/
 	}
 		
 }
@@ -568,6 +696,9 @@ float calculateMass()
 
 		acceleration[i].x = 0.0f;
 		acceleration[i].y = 0.0f;
+
+
+
 
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
