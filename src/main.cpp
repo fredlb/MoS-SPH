@@ -163,6 +163,7 @@ int main () {
   particlesInit();
   borderParticlesInit();
   updateGrid();
+  drawablePoints.reserve(kParticlesCount + kBorderParticlesCount);
 
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
@@ -255,7 +256,6 @@ void glInit()
 void createDrawablePoints()
 {
 	drawablePoints.clear();
-	drawablePoints.reserve(kParticlesCount + kBorderParticlesCount);
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		point p;
