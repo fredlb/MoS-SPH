@@ -322,15 +322,19 @@ void particlesInit()
 
 void borderParticlesInit()
 {
-	float stepLength = 2.0f/1000;
-	for(int i = 0; i<1000; i++)
+	float stepLengthx = 2.0f/500;
+	float stepLengthy = interactionRadius/4;
+	for(int i = 0; i<500; i++)
 	{
-		borderParticles[i].m_x = -1.0f + stepLength*i;
-		borderParticles[i].m_y = -1.0f;
+	for(int j = 0; j<4; j++)
+	{
+		borderParticles[i].m_x = -1.0f + stepLengthx*i;
+		borderParticles[i].m_y = -1.0f - stepLengthx*j;
 		borderParticles[i].m_mass = 1;
-		borderParticles[i].m_pressure = 2500;
-		borderParticles[i].m_massDensity = restDensity;
+		borderParticles[i].m_massDensity = 100*restDensity;
+		borderParticles[i].m_pressure = kstiffnes*(99*restDensity);
 
+	}
 	}
 }
 
