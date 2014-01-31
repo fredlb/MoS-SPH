@@ -19,7 +19,7 @@
 #define kPi 3.14159265359
 #define g -9.81
 #define kFrameRate 60
-#define kSubSteps 7
+#define kSubSteps 10
 
 #define kOffset 0.5f
 
@@ -66,10 +66,10 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.0001f;
+const float kDt = 0.0003f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
-const int kstiffnes = 50;
+const int kstiffnes = 100;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
 const float damp = 0.2f;
@@ -337,18 +337,15 @@ void particlesInit()
 void borderParticlesInit()
 {
 	float stepLengthx = 2.0f/kBorderParticlesCount;
-	float stepLengthy = interactionRadius/4;
-	for(int i = 0; i<kBorderParticlesCount; i++)
+	float stepLengthy = 2.0f/kBorderParticlesCount;
+
+	for(int i = 0; i < kBorderParticlesCount/4; i++)
 	{
-	//for(int j = 0; j<4; j++)
-	//{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
 		borderParticles[i].m_y = -0.98f;
 		borderParticles[i].m_mass = 1;
 		borderParticles[i].m_massDensity = 10*restDensity;
 		borderParticles[i].m_pressure = kstiffnes*(9*restDensity);
-
-	//}
 	}
 }
 
@@ -421,17 +418,10 @@ void calulateForces()
 					{
 						mdj = ppj->m_massDensity;
 
-<<<<<<< HEAD
-						normalx += (massj/mdj)*Wnormal[0];
-						normaly += (massj/mdj)*Wnormal[1];
-
-						gradNormal += (massj/mdj)*WlaplacianDefult(distance2);
-=======
 						normalx += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dx;
 						normaly += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dy;
 
 						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*(3*interactionRadius*interactionRadius-7*distance2);
->>>>>>> eb414fa106b08f45feabcff7c1c8ace3cead33f0
 
 						if( distance2 != 0)
 						{
@@ -445,13 +435,8 @@ void calulateForces()
 							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
 							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
 
-<<<<<<< HEAD
-							viscosityForcex += velocityDiffu * (massj/mdj) * WlaplacianViscosity(distance2);
-							viscosityForcey += velocityDiffv * (massj/mdj) * WlaplacianViscosity(distance2);
-=======
 							viscosityForcex += velocityDiffu * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
 							viscosityForcey += velocityDiffv * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
->>>>>>> eb414fa106b08f45feabcff7c1c8ace3cead33f0
 
 						}
 					}
