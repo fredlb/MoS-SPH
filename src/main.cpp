@@ -36,7 +36,7 @@ void particlesInit();
 void drawGrid();
 void updateGrid();
 void createDrawablePoints();
-void loopStructure();
+void calculatePressure();
 void integrate();
 void calulateForces();
 
@@ -68,8 +68,7 @@ const float damp = 0.2f;
 
 float particleMass;
 
-float surfaceLimit = sqrt(restDensity/averageParticles);	// defined as sqrt(restDensity/x) 
-							// where x is average particle sum in kernel
+float surfaceLimit = sqrt(restDensity/averageParticles);
 float accelerationX;
 float accelerationY;
 
@@ -92,6 +91,13 @@ struct particle
 	particle* next;
 };
 
+#define kMaxNeighbourCount 64
+struct Neighbours
+{
+    const particle* particles[kMaxNeighbourCount];
+    float r[kMaxNeighbourCount];
+    size_t count;
+};
 
 struct point
 {
@@ -117,6 +123,8 @@ point prevAcceleration[kParticlesCount];
 float vhx[kParticlesCount];
 float vhy[kParticlesCount];
 bool firstIteration = true;
+
+Neighbours neighbours[kParticlesCount];
 
 
 int main () {
@@ -180,7 +188,7 @@ int main () {
 	  for(int i = 0; i < kSubSteps; ++i)
 	  {
 		  updateGrid();
-		  loopStructure();
+		  calculatePressure();
 		  calulateForces();
 		  //integrate();
 
@@ -362,14 +370,10 @@ void calulateForces()
 		float mdi = pi.m_massDensity;
 		float mdj = 0.0f;
 		gravity = g*mdi;
-		//loop over cells 
-		for (size_t ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
+		//loop over neighbours 
+				for(size_t j=0; j < neighbours[i].count; ++j)
 				{
+					const particle* ppj = neighbours[i].particles[j];
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
@@ -377,8 +381,6 @@ void calulateForces()
 					{
 						float* Wnormal = WgradDefult(dx, dy);
 						mdj = ppj->m_massDensity;
-						//std::cout <<"W[0] = " << Wnormal[0] << std::endl;
-						//std::cout <<"W[1] = " << Wnormal[1] << std::endl;
 
 						normalx += (particleMass/mdj)*Wnormal[0];
 						normaly += (particleMass/mdj)*Wnormal[1];
@@ -403,9 +405,6 @@ void calulateForces()
 						}
 					}
 				}
-			}
-		}
-
 		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
 		if(normalLenght > surfaceLimit){
 			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
@@ -522,7 +521,7 @@ void calulateForces()
 		
 }
 
-void loopStructure()
+void calculatePressure()
 {
 	//Mass-density and pressure loop
 	for(size_t i = 0; i < kParticlesCount; ++i)
@@ -534,7 +533,9 @@ void loopStructure()
 
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		
 		float massDensity = 0.0f;
+		neighbours[i].count = 0;
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
@@ -553,6 +554,13 @@ void loopStructure()
 					{
 						//Density
 						massDensity += particleMass*Wdeafult(distance2);
+
+						if(neighbours[i].count < kMaxNeighbourCount)
+						{
+							neighbours[i].particles[neighbours[i].count] = ppj;
+							neighbours[i].r[neighbours[i].count] = sqrt(distance2);
+							++neighbours[i].count;
+						}
 					}
 				}
 			}
@@ -691,14 +699,13 @@ float calculateMass()
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
 		
+		/* For Fredriks inferior integration
 		prevAcceleration[i].x = 0.0f;
 		prevAcceleration[i].y = 0.0f;
 
 		acceleration[i].x = 0.0f;
 		acceleration[i].y = 0.0f;
-
-
-
+		*/
 
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
