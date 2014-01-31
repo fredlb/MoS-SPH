@@ -33,6 +33,7 @@ void advance();
 void render();
 void glInit();
 void particlesInit();
+void borderParticlesInit();
 void drawGrid();
 void updateGrid();
 void createDrawablePoints();
@@ -88,6 +89,8 @@ struct particle
 	float m_massDensity;
 	float m_pressure;
 
+	float m_mass;
+
 	particle* next;
 };
 
@@ -107,6 +110,7 @@ struct point
 
 
 particle particles[kParticlesCount];
+particle borderParticles[1000];
 const size_t kGridWidth = (size_t)(2.0 / cellSize);
 const size_t kGridHeight = (size_t)(2.0 / cellSize);
 const size_t kGridCellCount = kGridWidth * kGridHeight;
@@ -156,10 +160,12 @@ int main () {
   
   grid.reserve(kGridCellCount);
   particlesInit();
+  borderParticlesInit();
   updateGrid();
 
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
+  
 
   glInit();
 
@@ -314,6 +320,20 @@ void particlesInit()
   }
 }
 
+void borderParticlesInit()
+{
+	float stepLength = 2.0f/1000;
+	for(int i = 0; i<1000; i++)
+	{
+		borderParticles[i].m_x = -1.0f + stepLength*i;
+		borderParticles[i].m_y = -1.0f;
+		borderParticles[i].m_mass = 1;
+		borderParticles[i].m_pressure = 2500;
+		borderParticles[i].m_massDensity = restDensity;
+
+	}
+}
+
 void updateGrid()
 {
 	memset(&grid[0], 0, kGridCellCount*sizeof(particle*));
@@ -374,6 +394,8 @@ void calulateForces()
 				for(size_t j=0; j < neighbours[i].count; ++j)
 				{
 					const particle* ppj = neighbours[i].particles[j];
+					float massi = pi.m_mass;
+					float massj = ppj->m_mass;
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
@@ -382,10 +404,10 @@ void calulateForces()
 						float* Wnormal = WgradDefult(dx, dy);
 						mdj = ppj->m_massDensity;
 
-						normalx += (particleMass/mdj)*Wnormal[0];
-						normaly += (particleMass/mdj)*Wnormal[1];
+						normalx += (massj/mdj)*Wnormal[0];
+						normaly += (massj/mdj)*Wnormal[1];
 
-						gradNormal += (particleMass/mdj)*WlaplacianDefult(distance2);
+						gradNormal += (massj/mdj)*WlaplacianDefult(distance2);
 
 						if( distance2 != 0)
 						{
@@ -399,8 +421,8 @@ void calulateForces()
 							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[0];
 							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
 
-							viscosityForcex += velocityDiffu * (particleMass/mdj) * WlaplacianViscosity(distance2);
-							viscosityForcey += velocityDiffv * (particleMass/mdj) * WlaplacianViscosity(distance2);
+							viscosityForcex += velocityDiffu * (massj/mdj) * WlaplacianViscosity(distance2);
+							viscosityForcey += velocityDiffv * (massj/mdj) * WlaplacianViscosity(distance2);
 
 						}
 					}
@@ -536,6 +558,31 @@ void calculatePressure()
 		
 		float massDensity = 0.0f;
 		neighbours[i].count = 0;
+
+		//Loop over border
+		for(size_t j = 0; j < 1000; j++)
+		{
+			particle bp = borderParticles[j];
+			float pm = bp.m_mass;
+
+			float dx = pi.m_x - bp.m_x;
+			float dy = pi.m_y - bp.m_y;
+			float distance2 = dx*dx + dy*dy;
+
+			if(distance2 < interactionRadius*interactionRadius)
+			{
+				//Density
+				massDensity += particleMass*Wdeafult(distance2);
+
+				if(neighbours[i].count < kMaxNeighbourCount)
+				{
+					neighbours[i].particles[neighbours[i].count] = &bp;
+					neighbours[i].r[neighbours[i].count] = sqrt(distance2);
+					++neighbours[i].count;
+					//std::cout << "I'm on the border" << std::endl;
+				}
+			}
+		}
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
 		{
@@ -567,8 +614,10 @@ void calculatePressure()
 		}
 		//save massDensity
 		pi.m_massDensity = massDensity;
+		//std::cout << massDensity << std::endl;
 		//save Pressure
 		pi.m_pressure = kstiffnes * (massDensity - restDensity);
+		//std::cout << pi.m_pressure << std::endl;
 	}
 
 
@@ -732,7 +781,13 @@ float calculateMass()
 		}
 	}
 	float dA = density/kParticlesCount;
-	return (dA*restDensity)/(dA*dA);
+	float mass = (dA*restDensity)/(dA*dA);
+	for(size_t i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+		pi.m_mass = mass;
+	}
+	return mass;
 }
 
 float WKernel(float distance2)
