@@ -27,7 +27,7 @@
 
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.05f
+#define interactionRadius 0.04f
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -198,6 +198,7 @@ int main () {
 
 	  
 	  //while(accumulator >= kDt)
+	  
 	  for(int i = 0; i < kSubSteps; ++i)
 	  {
 		  updateGrid();
@@ -261,6 +262,7 @@ void glInit()
 void createDrawablePoints()
 {
 	drawablePoints.clear();
+	#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		point p;
@@ -268,6 +270,7 @@ void createDrawablePoints()
 		p.y = particles[i].m_y;
 		drawablePoints[i] = p;
 	}
+	#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kBorderParticlesCount; ++i)
 	{
 		point p;
@@ -381,7 +384,7 @@ void updateGrid()
 void calulateForces()
 {
 	//Force loop
-	#pragma omp parallel for schedule(dynamic)
+	//
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
@@ -406,7 +409,6 @@ void calulateForces()
 		float mdj = 0.0f;
 		gravity = g*mdi;
 		//loop over neighbours 
-
 				for(int j=0; j < neighbours[i].count; ++j)
 				{
 					const particle* ppj = neighbours[i].particles[j];
@@ -488,7 +490,7 @@ void calculatePressure()
 {
 	//Mass-density and pressure loop
 
-	#pragma omp parallel for schedule(dynamic)
+	
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
@@ -570,7 +572,9 @@ void calculatePressure()
 float calculateMass()
 {
 	float density = 0.0f; 
-	for(size_t i = 0; i < kParticlesCount; ++i)
+	
+
+	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
 
