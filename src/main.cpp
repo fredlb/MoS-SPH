@@ -39,7 +39,6 @@ void drawGrid();
 void updateGrid();
 void createDrawablePoints();
 void calculatePressure();
-void integrate();
 void calulateForces();
 
 float calculateMass();
@@ -339,7 +338,7 @@ void borderParticlesInit()
 	float stepLengthx = 2.0f/kBorderParticlesCount;
 	float stepLengthy = 2.0f/kBorderParticlesCount;
 
-	for(int i = 0; i < kBorderParticlesCount/4; i++)
+	for(int i = 0; i < kBorderParticlesCount; i++)
 	{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
 		borderParticles[i].m_y = -0.98f;
@@ -562,117 +561,6 @@ void calculatePressure()
 
 
 	
-}
-
-void integrate()
-{
-	for (int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		//True leap-frog
-		if(firstIteration){
-			vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
-			vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
-
-			pi.m_u += accelerationX*kDt;
-			pi.m_v += accelerationY*kDt;
-
-			pi.m_x += vhx[i]*kDt;
-			pi.m_y += vhy[i]*kDt;
-
-			firstIteration = false;
-		}else{
-			vhx[i] += accelerationX*kDt;
-			vhy[i] += accelerationY*kDt;
-
-			pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
-			pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
-
-			pi.m_x += vhx[i]*kDt;
-			pi.m_y += vhy[i]*kDt;
-		}
-
-		/*
-		pi.m_x += pi.m_u*kDt + 0.5*acceleration[i].x*kDt*kDt;
-		pi.m_y += pi.m_v*kDt + 0.5*acceleration[i].y*kDt*kDt;
-
-
-		pi.m_u += 0.5*(acceleration[i].x + prevAcceleration[i].x)*kDt;
-		pi.m_v += 0.5*(acceleration[i].y + prevAcceleration[i].y)*kDt;
-
-		prevAcceleration[i].x = acceleration[i].x;
-		prevAcceleration[i].y = acceleration[i].y;
-		*/
-		//Colision handling and response
-		float current,cp,d,n,u,v;
-		if(pi.m_x < -1)
-		{
-			current = pi.m_x;
-			u = pi.m_u;
-			v = pi.m_v;
-			cp = -1;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-			pi.m_x = cp + d*n;
-			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
-			vhy[i] = v;
-		}
-
-		if(pi.m_x > 1)
-		{
-			current = pi.m_x;
-			u = pi.m_u;
-			v = pi.m_v;
-			cp = 1;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = -1;
-
-			pi.m_x = cp + d*n;
-			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
-			vhy[i] = v;
-		}
-		
-		if(pi.m_y < -1)
-		{
-			current = pi.m_y;
-			v = pi.m_v;
-			u = pi.m_u;
-			cp = -1;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-
-			pi.m_y = cp + d*n;
-			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
-			vhx[i] = u;
-
-		}
-		
-		if(pi.m_y > 1)
-		{
-			current = pi.m_y;
-			u = pi.m_u;
-			v = pi.m_v;
-			cp = 1;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = -1;
-
-			pi.m_y = cp + d*n;
-			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
-			vhx[i] = u;
-		}
-		
-	}
-		
-}
-
-void collisionResponse()
-{
-
 }
 
 float calculateMass()
