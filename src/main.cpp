@@ -49,6 +49,12 @@ float WlaplacianViscosity(float distance2);
 float* WgradDefult(float dx, float dy);
 float WlaplacianDefult(float distance2);
 
+const float kWdeafult = (315/(64*kPi*pow(interactionRadius,9))); 
+const float kWgradPressure = -(45/(kPi*pow(interactionRadius,6)));
+const float kWlaplacianViscosity = (45/(kPi*pow(interactionRadius,6)));
+const float kWgradDefult = -(945/(32*kPi*pow(interactionRadius,9)));
+const float kWlaplacianDefult = -(945/(32*kPi*pow(interactionRadius,9)));
+
 unsigned int vao;
 unsigned int vbo;
 unsigned int shader_programme;
@@ -405,28 +411,39 @@ void calulateForces()
 					float distance2 = dx*dx + dy*dy;
 					if(distance2 < interactionRadius*interactionRadius)
 					{
-						float* Wnormal = WgradDefult(dx, dy);
 						mdj = ppj->m_massDensity;
 
+<<<<<<< HEAD
 						normalx += (massj/mdj)*Wnormal[0];
 						normaly += (massj/mdj)*Wnormal[1];
 
 						gradNormal += (massj/mdj)*WlaplacianDefult(distance2);
+=======
+						normalx += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dx;
+						normaly += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dy;
+
+						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*(3*interactionRadius*interactionRadius-7*distance2);
+>>>>>>> eb414fa106b08f45feabcff7c1c8ace3cead33f0
 
 						if( distance2 != 0)
 						{
-							float* W = WgradPressure(dx,dy);
+							float distance = sqrt(distance2);
 							// uj - ui
 							float velocityDiffu = ppj->m_u - pi.m_u;
 							float velocityDiffv = ppj->m_v - pi.m_v;
 
 							float pressi = pi.m_pressure;
 							float pressj = ppj->m_pressure;
-							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[0];
-							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*W[1];
+							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
+							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
 
+<<<<<<< HEAD
 							viscosityForcex += velocityDiffu * (massj/mdj) * WlaplacianViscosity(distance2);
 							viscosityForcey += velocityDiffv * (massj/mdj) * WlaplacianViscosity(distance2);
+=======
+							viscosityForcex += velocityDiffu * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+							viscosityForcey += velocityDiffv * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+>>>>>>> eb414fa106b08f45feabcff7c1c8ace3cead33f0
 
 						}
 					}
@@ -604,7 +621,7 @@ void calculatePressure()
 					if(distance2 < interactionRadius*interactionRadius)
 					{
 						//Density
-						massDensity += particleMass*Wdeafult(distance2);
+						massDensity += particleMass*kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
 
 						if(neighbours[i].count < kMaxNeighbourCount)
 						{
@@ -778,7 +795,7 @@ float calculateMass()
 					float distance2 = dx*dx + dy*dy;
 					if(distance2 < interactionRadius*interactionRadius)
 					{
-						density += Wdeafult(distance2);
+						density += kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
 					}
 				}
 			}
@@ -811,7 +828,7 @@ float* WgradPressure(float dx, float dy)
 	float W[2];
 	float distance2 = dx*dx + dy*dy;
 	
-	W[0] = -(45/(kPi*pow(interactionRadius,6)))*(dx/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
+	W[0] = -(45/(kPi*pow(interactionRadius,6)))*pow((interactionRadius-sqrt(distance2)),2)*(dx/sqrt(distance2));
 	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dy/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
 
 	return W;
@@ -828,7 +845,7 @@ float* WgradDefult(float dx, float dy)
 	float W[2];
 	float distance2 = dx*dx + dy*dy;
 
-	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*dx*pow((pow(interactionRadius,2)-distance2),2);
+	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*pow((pow(interactionRadius,2)-distance2),2)*dx;
 	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dy*pow((pow(interactionRadius,2)-distance2),2);
 	
 	return W;
