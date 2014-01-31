@@ -19,7 +19,7 @@
 #define kPi 3.14159265359
 #define g -9.81
 #define kFrameRate 60
-#define kSubSteps 10
+#define kSubSteps 20
 
 #define kOffset 0.5f
 
@@ -27,7 +27,7 @@
 
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.1f
+#define interactionRadius 0.05f
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -65,7 +65,7 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.0003f;
+const float kDt = 0.0001f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 100;
@@ -381,7 +381,8 @@ void updateGrid()
 void calulateForces()
 {
 	//Force loop
-	for(size_t i = 0; i < kParticlesCount; ++i)
+	#pragma omp parallel for schedule(dynamic)
+	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
 
@@ -405,7 +406,8 @@ void calulateForces()
 		float mdj = 0.0f;
 		gravity = g*mdi;
 		//loop over neighbours 
-				for(size_t j=0; j < neighbours[i].count; ++j)
+
+				for(int j=0; j < neighbours[i].count; ++j)
 				{
 					const particle* ppj = neighbours[i].particles[j];
 					float massi = pi.m_mass;
@@ -485,7 +487,9 @@ void calulateForces()
 void calculatePressure()
 {
 	//Mass-density and pressure loop
-	for(size_t i = 0; i < kParticlesCount; ++i)
+
+	#pragma omp parallel for schedule(dynamic)
+	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
 
@@ -522,10 +526,10 @@ void calculatePressure()
 				}
 			}
 		}
-		//loop over cells 
-		for (size_t ni=gi-1; ni<=gi+1; ++ni)
+		//loop over cells
+		for (int ni=gi-1; ni<=gi+1; ++ni)
 		{
-			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
+			for (int nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
 			{
 				//loop over neighbors
 				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
