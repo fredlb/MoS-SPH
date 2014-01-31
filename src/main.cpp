@@ -13,6 +13,7 @@
 #include <math.h>
 
 #define kParticlesCount 1024
+#define kBorderParticlesCount 300
 #define kWindowWidth 640
 #define kWindowHeight 480
 #define kPi 3.14159265359
@@ -110,7 +111,7 @@ struct point
 
 
 particle particles[kParticlesCount];
-particle borderParticles[1000];
+particle borderParticles[kBorderParticlesCount];
 const size_t kGridWidth = (size_t)(2.0 / cellSize);
 const size_t kGridHeight = (size_t)(2.0 / cellSize);
 const size_t kGridCellCount = kGridWidth * kGridHeight;
@@ -254,13 +255,20 @@ void glInit()
 void createDrawablePoints()
 {
 	drawablePoints.clear();
-	drawablePoints.reserve(kParticlesCount);
+	drawablePoints.reserve(kParticlesCount + kBorderParticlesCount);
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		point p;
 		p.x = particles[i].m_x;
 		p.y = particles[i].m_y;
 		drawablePoints[i] = p;
+	}
+	for(int i = 0; i < kBorderParticlesCount; ++i)
+	{
+		point p;
+		p.x = borderParticles[i].m_x;
+		p.y = borderParticles[i].m_y;
+		drawablePoints[kParticlesCount + i] = p;
 	}
 }
 
@@ -271,7 +279,7 @@ void render()
 	vbo = 0;
     glGenBuffers (1, &vbo);
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glBufferData (GL_ARRAY_BUFFER, kParticlesCount * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
+    glBufferData (GL_ARRAY_BUFFER, (kParticlesCount + kBorderParticlesCount) * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
 
     vao = 0;
     glGenVertexArrays (1, &vao);
@@ -297,7 +305,7 @@ void render()
     glPointSize(5.0f);
 
     // draw points from the currently bound VAO with current in-use shader
-    glDrawArrays (GL_POINTS, 0, kParticlesCount);
+    glDrawArrays (GL_POINTS, 0, kParticlesCount + kBorderParticlesCount);
 }
 
 
@@ -322,19 +330,19 @@ void particlesInit()
 
 void borderParticlesInit()
 {
-	float stepLengthx = 2.0f/500;
+	float stepLengthx = 2.0f/kBorderParticlesCount;
 	float stepLengthy = interactionRadius/4;
-	for(int i = 0; i<500; i++)
+	for(int i = 0; i<kBorderParticlesCount; i++)
 	{
-	for(int j = 0; j<4; j++)
-	{
+	//for(int j = 0; j<4; j++)
+	//{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
-		borderParticles[i].m_y = -1.0f - stepLengthx*j;
+		borderParticles[i].m_y = -0.98f;
 		borderParticles[i].m_mass = 1;
-		borderParticles[i].m_massDensity = 100*restDensity;
-		borderParticles[i].m_pressure = kstiffnes*(99*restDensity);
+		borderParticles[i].m_massDensity = 10*restDensity;
+		borderParticles[i].m_pressure = kstiffnes*(9*restDensity);
 
-	}
+	//}
 	}
 }
 
@@ -467,80 +475,6 @@ void calulateForces()
                         pi.m_x += vhx[i]*kDt;
                         pi.m_y += vhy[i]*kDt;
                 }
-                
-                /* Fredriks inferior leap-frog
-                pi.m_x += pi.m_u*kDt + 0.5*accelerationX*kDt*kDt;
-                pi.m_y += pi.m_v*kDt + 0.5*accelerationY*kDt*kDt;
-
-
-                pi.m_u += 0.5*(accelerationX + prevAcceleration[i].x)*kDt;
-                pi.m_v += 0.5*(accelerationY + prevAcceleration[i].y)*kDt;
-
-                prevAcceleration[i].x = accelerationX;
-                prevAcceleration[i].y = accelerationY;
-                */
-                //Colision handling and response
-                float current,cp,d,n,u,v;
-                if(pi.m_x < -1)
-                {
-                        current = pi.m_x;
-                        u = pi.m_u;
-                        v = pi.m_v;
-                        cp = -1;
-
-                        d = sqrt((cp-current)*(cp-current));
-                        n = 1;
-                        pi.m_x = cp + d*n;
-                        vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
-                        vhy[i] = v;
-                }
-
-                if(pi.m_x > 1)
-                {
-                        current = pi.m_x;
-                        u = pi.m_u;
-                        v = pi.m_v;
-                        cp = 1;
-
-                        d = sqrt((cp-current)*(cp-current));
-                        n = -1;
-
-                        pi.m_x = cp + d*n;
-                        vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
-                        vhy[i] = v;
-                }
-
-                if(pi.m_y < -1)
-                {
-                        current = pi.m_y;
-                        v = pi.m_v;
-                        u = pi.m_u;
-                        cp = -1;
-
-                        d = sqrt((cp-current)*(cp-current));
-                        n = 1;
-
-                        pi.m_y = cp + d*n;
-                        vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
-                        vhx[i] = u;
-
-                }
-				/*
-                if(pi.m_y > 1)
-                {
-                        current = pi.m_y;
-                        u = pi.m_u;
-                        v = pi.m_v;
-                        cp = 1;
-
-                        d = sqrt((cp-current)*(cp-current));
-                        n = -1;
-
-                        pi.m_y = cp + d*n;
-                        vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
-                        vhx[i] = u;
-                }*/
-
 
 	}
 
@@ -562,11 +496,11 @@ void calculatePressure()
 		
 		float massDensity = 0.0f;
 		neighbours[i].count = 0;
-
+		
 		//Loop over border
-		for(size_t j = 0; j < 1000; j++)
+		for(size_t j = 0; j < kBorderParticlesCount; j++)
 		{
-			particle bp = borderParticles[j];
+			particle& bp = borderParticles[j];
 			float pm = bp.m_mass;
 
 			float dx = pi.m_x - bp.m_x;
@@ -698,7 +632,7 @@ void integrate()
 			vhx[i] = u - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(u*n)*n;
 			vhy[i] = v;
 		}
-		/*
+		
 		if(pi.m_y < -1)
 		{
 			current = pi.m_y;
@@ -713,8 +647,8 @@ void integrate()
 			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
 			vhx[i] = u;
 
-		}*/
-		/*
+		}
+		
 		if(pi.m_y > 1)
 		{
 			current = pi.m_y;
@@ -729,7 +663,7 @@ void integrate()
 			vhy[i] = v - (1 + damp*(d/(kDt*sqrt(u*u+v*v))))*(v*n)*n;
 			vhx[i] = u;
 		}
-		*/
+		
 	}
 		
 }
