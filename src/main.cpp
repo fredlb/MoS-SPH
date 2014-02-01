@@ -1,4 +1,6 @@
 
+#include <stdlib.h>
+#include <crtdbg.h>
 #include <GL/glew.h> // include GLEW and new version of GL on Windows
 #include <glfw3.h> // GLFW helper library
 #include <stdio.h>
@@ -11,6 +13,9 @@
 
 #include <vector>
 #include <math.h>
+#include <vld.h>
+
+#define _CRTDBG_MAP_ALLOC
 
 #define kParticlesCount 1024
 #define kBorderParticlesCount 300
@@ -19,7 +24,7 @@
 #define kPi 3.14159265359
 #define g -9.81
 #define kFrameRate 60
-#define kSubSteps 20
+#define kSubSteps 7
 
 #define kOffset 0.5f
 
@@ -27,7 +32,8 @@
 
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.04f
+#define interactionRadius 0.035f
+#define IR2 interactionRadius*interactionRadius
 #define cellSize (2.0f*interactionRadius)
 
 void advance();
@@ -65,7 +71,7 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.0001f;
+const float kDt = 0.00025f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 100;
@@ -135,7 +141,7 @@ float vhy[kParticlesCount];
 bool firstIteration = true;
 
 Neighbours neighbours[kParticlesCount];
-
+GLuint programID = 0;
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -164,11 +170,11 @@ int main () {
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
   
-  grid.reserve(kGridCellCount);
+  grid.resize(kGridCellCount);
   particlesInit();
   borderParticlesInit();
   updateGrid();
-  drawablePoints.reserve(kParticlesCount + kBorderParticlesCount);
+  drawablePoints.resize(kParticlesCount + kBorderParticlesCount);
 
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
@@ -198,7 +204,7 @@ int main () {
 
 	  
 	  //while(accumulator >= kDt)
-	  
+	  //#pragma omp parallel for schedule(dynamic)
 	  for(int i = 0; i < kSubSteps; ++i)
 	  {
 		  updateGrid();
@@ -226,8 +232,8 @@ int main () {
 
 void glInit()
 {
-    GLuint programID = LoadShader( "src/default.vert", "src/flat.frag" );
-    glUseProgram (programID);
+     programID = LoadShader( "src/default.vert", "src/flat.frag" );
+    
 
 
 	point topleft;
@@ -252,7 +258,14 @@ void glInit()
 	DEBUG_CORNER.push_back(bottomleft);
 	DEBUG_CORNER.push_back(bottomright);
 
+	vbo = 0;
+	glGenBuffers (1, &vbo);
+	
 
+	vao = 0;
+	glGenVertexArrays (1, &vao);
+	
+	
 
 
 }
@@ -261,8 +274,8 @@ void glInit()
 
 void createDrawablePoints()
 {
-	drawablePoints.clear();
-	#pragma omp parallel for schedule(dynamic)
+	
+	//#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		point p;
@@ -270,7 +283,7 @@ void createDrawablePoints()
 		p.y = particles[i].m_y;
 		drawablePoints[i] = p;
 	}
-	#pragma omp parallel for schedule(dynamic)
+	//#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kBorderParticlesCount; ++i)
 	{
 		point p;
@@ -283,23 +296,18 @@ void createDrawablePoints()
 void render()
 {
 
-    
-	vbo = 0;
-    glGenBuffers (1, &vbo);
-    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glBufferData (GL_ARRAY_BUFFER, (kParticlesCount + kBorderParticlesCount) * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
-
-    vao = 0;
-    glGenVertexArrays (1, &vao);
-    glBindVertexArray (vao);
-    glEnableVertexAttribArray (0);
-    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-
-    glClear (GL_COLOR_BUFFER_BIT);
-    glBindVertexArray (vao);
-
     glClearColor(0.05f, 0.05f, 0.05f, 1);
+	glClear (GL_COLOR_BUFFER_BIT);
+	glUseProgram (programID);
+    
+	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	glBufferData (GL_ARRAY_BUFFER, (kParticlesCount + kBorderParticlesCount) * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
+	glBindVertexArray (vao);
+    //glBindVertexArray (vao);
+	glEnableVertexAttribArray (0);
+	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    
  
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -314,6 +322,7 @@ void render()
 
     // draw points from the currently bound VAO with current in-use shader
     glDrawArrays (GL_POINTS, 0, kParticlesCount + kBorderParticlesCount);
+	//glDisableVertexAttribArray(0);
 }
 
 
@@ -354,7 +363,7 @@ void borderParticlesInit()
 void updateGrid()
 {
 	memset(&grid[0], 0, kGridCellCount*sizeof(particle*));
-
+	//grid.swap( std::vector<particle*>(grid.size(), 0) );
 	for(size_t i = 0; i < kParticlesCount; i++)
 	{
 		particle& pi = particles[i];
@@ -417,14 +426,14 @@ void calulateForces()
 					float dx = pi.m_x - ppj->m_x;
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
-					if(distance2 < interactionRadius*interactionRadius)
+					if(distance2 < IR2)
 					{
 						mdj = ppj->m_massDensity;
 
-						normalx += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dx;
-						normaly += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dy;
+						normalx += (particleMass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dx;
+						normaly += (particleMass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dy;
 
-						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*(3*interactionRadius*interactionRadius-7*distance2);
+						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2);
 
 						if( distance2 != 0)
 						{
@@ -514,7 +523,7 @@ void calculatePressure()
 			float dy = pi.m_y - bp.m_y;
 			float distance2 = dx*dx + dy*dy;
 
-			if(distance2 < interactionRadius*interactionRadius)
+			if(distance2 < IR2)
 			{
 				//Density
 				massDensity += particleMass*Wdeafult(distance2);
@@ -542,10 +551,10 @@ void calculatePressure()
 					float dy = pi.m_y - ppj->m_y;
 					float distance2 = dx*dx + dy*dy;
 
-					if(distance2 < interactionRadius*interactionRadius)
+					if(distance2 < IR2)
 					{
 						//Density
-						massDensity += particleMass*kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
+						massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
 
 						if(neighbours[i].count < kMaxNeighbourCount)
 						{
@@ -583,14 +592,6 @@ float calculateMass()
 
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		/* For Fredriks inferior integration
-		prevAcceleration[i].x = 0.0f;
-		prevAcceleration[i].y = 0.0f;
-
-		acceleration[i].x = 0.0f;
-		acceleration[i].y = 0.0f;
-		*/
 
 		//loop over cells 
 		for (size_t ni=gi-1; ni<=gi+1; ++ni)
