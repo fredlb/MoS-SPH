@@ -89,10 +89,12 @@ xcopy /y "$(ProjectDir)src\*.frag" "$(OutDir)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ParticleSystem.cpp" />
     <ClCompile Include="src\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\particles.h" />
+    <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\vec2.h" />
     <ClInclude Include="src\shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

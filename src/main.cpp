@@ -1,43 +1,43 @@
-
+#include <stdlib.h>
 #include <GL/glew.h> // include GLEW and new version of GL on Windows
 #include <glfw3.h> // GLFW helper library
 #include <stdio.h>
 #include <iostream>
 #include <random>
 #include <algorithm>
-
-#include "particles.h"
-#include "shader.h"
-
 #include <vector>
 #include <math.h>
 
-#define kParticlesCount 1024
-#define kBorderParticlesCount 300
+#include "shader.h"
+#include "ParticleSystem.h"
+
 #define kWindowWidth 640
 #define kWindowHeight 480
+
+#define kParticlesCount 1024
+#define kBorderParticlesCount 300
 #define kPi 3.14159265359
 #define g -9.81
 #define kFrameRate 60
-#define kSubSteps 20
+#define kSubSteps 7
 
 #define kOffset 0.5f
 
-//#define kDt ((1.0f/kFrameRate) / kSubSteps)
-
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.04f
+#define interactionRadius 0.035f
+#define IR2 interactionRadius*interactionRadius
 #define cellSize (2.0f*interactionRadius)
 
-void advance();
 void render();
 void glInit();
+//void drawGrid();
+void createDrawablePoints(ParticleSystem s);
+
+void advance();
 void particlesInit();
 void borderParticlesInit();
-void drawGrid();
 void updateGrid();
-void createDrawablePoints();
 void calculatePressure();
 void calulateForces();
 
@@ -65,7 +65,7 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.0001f;
+const float kDt = 0.00025f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 100;
@@ -79,10 +79,7 @@ float surfaceLimit = sqrt(restDensity/averageParticles);
 float accelerationX;
 float accelerationY;
 
-//Every force
-float	pressureForcex,	pressureForcey,	viscosityForcex,
-		viscosityForcey,normalx, normaly, gradNormal,
-		surfaceTensionForcex,surfaceTensionForcey, gravity;
+
 
 
 struct particle
@@ -101,12 +98,7 @@ struct particle
 };
 
 #define kMaxNeighbourCount 64
-struct Neighbours
-{
-    const particle* particles[kMaxNeighbourCount];
-    float r[kMaxNeighbourCount];
-    size_t count;
-};
+
 
 struct point
 {
@@ -128,14 +120,10 @@ std::vector<particle*> grid;
 std::vector<point> drawablePoints;
 std::vector<point> DEBUG_CORNER;
 
-point acceleration[kParticlesCount];
-point prevAcceleration[kParticlesCount];
-float vhx[kParticlesCount];
-float vhy[kParticlesCount];
+
 bool firstIteration = true;
 
-Neighbours neighbours[kParticlesCount];
-
+GLuint programID = 0;
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -143,7 +131,6 @@ int main () {
     fprintf (stderr, "ERROR: could not start GLFW3\n");
     return 1;
   } 
-
 
   GLFWwindow* window = glfwCreateWindow (kWindowWidth, kWindowHeight, "Here be fluids", NULL, NULL);
   if (!window) 
@@ -164,23 +151,15 @@ int main () {
   printf ("Renderer: %s\n", renderer);
   printf ("OpenGL version supported %s\n", version);
   
-  grid.reserve(kGridCellCount);
-  particlesInit();
-  borderParticlesInit();
-  updateGrid();
-  drawablePoints.reserve(kParticlesCount + kBorderParticlesCount);
+  ParticleSystem simulation;
 
-  particleMass = calculateMass();
-  std::cout << "Mass: "<< particleMass << std::endl;
-  
+
+  drawablePoints.resize(kParticlesCount + kBorderParticlesCount);
+
+
 
   glInit();
 
-  std::cout << "interaction radius: " << interactionRadius << std::endl;
-  std::cout << "cellSize: " << cellSize << std::endl;
-  std::cout << "grid cell count: " << kGridCellCount << std::endl;
-  std::cout << "kgridwidth: " << kGridWidth << std::endl;
-  std::cout << "kDt: " << kDt << std::endl;
 
 
   double t = 0.0;
@@ -189,28 +168,19 @@ int main () {
 
   while (!glfwWindowShouldClose (window)) 
   {
-	  /*double newTime = glfwGetTime();
 
-	  double frameTime = newTime - currentTime;
-	  currentTime = newTime;
-
-	  accumulator += frameTime;*/
-
-	  
-	  //while(accumulator >= kDt)
-	  
 	  for(int i = 0; i < kSubSteps; ++i)
 	  {
-		  updateGrid();
-		  calculatePressure();
-		  calulateForces();
+
+		  simulation.advance();
+
 		  //integrate();
 
 		  //accumulator -= kDt;
 		  //t += kDt;
 	  }
 
-	  createDrawablePoints();
+	  createDrawablePoints(simulation);
 	  render();
 
 	  glfwPollEvents ();
@@ -226,15 +196,15 @@ int main () {
 
 void glInit()
 {
-    GLuint programID = LoadShader( "src/default.vert", "src/flat.frag" );
-    glUseProgram (programID);
+     programID = LoadShader( "src/default.vert", "src/flat.frag" );
+    
 
 
 	point topleft;
 	point topright;
 	point bottomleft;
 	point bottomright;
-	
+
 	topleft.x = -1.0f;
 	topleft.y = 1.0f;
 
@@ -252,6 +222,13 @@ void glInit()
 	DEBUG_CORNER.push_back(bottomleft);
 	DEBUG_CORNER.push_back(bottomright);
 
+	vbo = 0;
+	glGenBuffers (1, &vbo);
+
+
+	vao = 0;
+	glGenVertexArrays (1, &vao);
+
 
 
 
@@ -259,23 +236,23 @@ void glInit()
 
 
 
-void createDrawablePoints()
+void createDrawablePoints(ParticleSystem s)
 {
-	drawablePoints.clear();
-	#pragma omp parallel for schedule(dynamic)
+
+	//#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		point p;
-		p.x = particles[i].m_x;
-		p.y = particles[i].m_y;
+		p.x = s.particles[i].m_x;
+		p.y = s.particles[i].m_y;
 		drawablePoints[i] = p;
 	}
-	#pragma omp parallel for schedule(dynamic)
+	//#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < kBorderParticlesCount; ++i)
 	{
 		point p;
-		p.x = borderParticles[i].m_x;
-		p.y = borderParticles[i].m_y;
+		p.x = s.borderParticles[i].m_x;
+		p.y = s.borderParticles[i].m_y;
 		drawablePoints[kParticlesCount + i] = p;
 	}
 }
@@ -283,23 +260,18 @@ void createDrawablePoints()
 void render()
 {
 
-    
-	vbo = 0;
-    glGenBuffers (1, &vbo);
-    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glBufferData (GL_ARRAY_BUFFER, (kParticlesCount + kBorderParticlesCount) * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
-
-    vao = 0;
-    glGenVertexArrays (1, &vao);
-    glBindVertexArray (vao);
-    glEnableVertexAttribArray (0);
-    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-
-    glClear (GL_COLOR_BUFFER_BIT);
-    glBindVertexArray (vao);
-
     glClearColor(0.05f, 0.05f, 0.05f, 1);
+	glClear (GL_COLOR_BUFFER_BIT);
+	glUseProgram (programID);
+    
+	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	glBufferData (GL_ARRAY_BUFFER, (kParticlesCount + kBorderParticlesCount) * sizeof(point), &drawablePoints[0], GL_STATIC_DRAW);
+	glBindVertexArray (vao);
+    //glBindVertexArray (vao);
+	glEnableVertexAttribArray (0);
+	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    
  
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -314,360 +286,7 @@ void render()
 
     // draw points from the currently bound VAO with current in-use shader
     glDrawArrays (GL_POINTS, 0, kParticlesCount + kBorderParticlesCount);
+	//glDisableVertexAttribArray(0);
 }
 
 
-void particlesInit()
-{
-
-	std::mt19937 eng((std::random_device())());
-	std::uniform_real_distribution<> pos_dist(-0.001,0.001);
-
-	int rowcolSize = sqrt(kParticlesCount);
-
-  for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
-  {
-	  float stepLength = 1.0f/rowcolSize;
-	  for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
-	  {
-		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_x = -kOffset + particleIndexCol*stepLength; // + pos_dist(eng);
-		  particles[particleIndexCol + rowcolSize*particleIndexRow].m_y = -kOffset + particleIndexRow*stepLength; // + pos_dist(eng);
-	  }
-  }
-}
-
-void borderParticlesInit()
-{
-	float stepLengthx = 2.0f/kBorderParticlesCount;
-	float stepLengthy = 2.0f/kBorderParticlesCount;
-
-	for(int i = 0; i < kBorderParticlesCount; i++)
-	{
-		borderParticles[i].m_x = -1.0f + stepLengthx*i;
-		borderParticles[i].m_y = -0.98f;
-		borderParticles[i].m_mass = 1;
-		borderParticles[i].m_massDensity = 10*restDensity;
-		borderParticles[i].m_pressure = kstiffnes*(9*restDensity);
-	}
-}
-
-void updateGrid()
-{
-	memset(&grid[0], 0, kGridCellCount*sizeof(particle*));
-
-	for(size_t i = 0; i < kParticlesCount; i++)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-
-		if (x < 1)
-			x = 1;
-		else if (x > kGridWidth-2)
-			x = kGridWidth-2;
-
-		if (y < 1)
-			y = 1;
-		else if (y > kGridHeight-2)
-			y = kGridHeight-2;
-
-		pi.next = grid[x+y*kGridWidth];
-		grid[x+y*kGridWidth] = &pi;
-
-		gridCoords[i*2] = x;
-		gridCoords[i*2+1] = y;
-	}
-}
-
-void calulateForces()
-{
-	//Force loop
-	//
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		pressureForcex = 0.0f; 
-		pressureForcey = 0.0f;
-		viscosityForcex = 0.0f;
-		viscosityForcey = 0.0f;
-		normalx = 0.0f;
-		normaly = 0.0f;
-		gradNormal = 0.0f;
-		surfaceTensionForcex = 0.0f;
-		surfaceTensionForcey = 0.0f;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-
-		float mdi = pi.m_massDensity;
-		float mdj = 0.0f;
-		gravity = g*mdi;
-		//loop over neighbours 
-				for(int j=0; j < neighbours[i].count; ++j)
-				{
-					const particle* ppj = neighbours[i].particles[j];
-					float massi = pi.m_mass;
-					float massj = ppj->m_mass;
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
-					float distance2 = dx*dx + dy*dy;
-					if(distance2 < interactionRadius*interactionRadius)
-					{
-						mdj = ppj->m_massDensity;
-
-						normalx += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dx;
-						normaly += (particleMass/mdj)*kWgradDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*dy;
-
-						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(interactionRadius*interactionRadius-distance2)*(interactionRadius*interactionRadius-distance2)*(3*interactionRadius*interactionRadius-7*distance2);
-
-						if( distance2 != 0)
-						{
-							float distance = sqrt(distance2);
-							// uj - ui
-							float velocityDiffu = ppj->m_u - pi.m_u;
-							float velocityDiffv = ppj->m_v - pi.m_v;
-
-							float pressi = pi.m_pressure;
-							float pressj = ppj->m_pressure;
-							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
-							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
-
-							viscosityForcex += velocityDiffu * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
-							viscosityForcey += velocityDiffv * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
-
-						}
-					}
-				}
-		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
-		if(normalLenght > surfaceLimit){
-			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
-			surfaceTensionForcey = - surfaceTension  * gradNormal * (normaly/normalLenght);
-		}
-		pressureForcex = -mdi * pressureForcex;
-		pressureForcey = -mdi * pressureForcey;
-
-		viscosityForcex = viscosityConstant*viscosityForcex;
-		viscosityForcey = viscosityConstant*viscosityForcey;
-
-		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
-
-		//True leap-frog
-                if(firstIteration){
-                        vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
-                        vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
-                        
-                        pi.m_u += accelerationX*kDt;
-                        pi.m_v += accelerationY*kDt;
-
-                        pi.m_x += vhx[i]*kDt;
-                        pi.m_y += vhy[i]*kDt;
-
-                        firstIteration = false;
-                }else{
-                        vhx[i] += accelerationX*kDt;
-                        vhy[i] += accelerationY*kDt;
-                        
-                        pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
-                        pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
-
-                        pi.m_x += vhx[i]*kDt;
-                        pi.m_y += vhy[i]*kDt;
-                }
-
-	}
-
-		
-}
-
-void calculatePressure()
-{
-	//Mass-density and pressure loop
-
-	
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		float massDensity = 0.0f;
-		neighbours[i].count = 0;
-		
-		//Loop over border
-		for(size_t j = 0; j < kBorderParticlesCount; j++)
-		{
-			particle& bp = borderParticles[j];
-			float pm = bp.m_mass;
-
-			float dx = pi.m_x - bp.m_x;
-			float dy = pi.m_y - bp.m_y;
-			float distance2 = dx*dx + dy*dy;
-
-			if(distance2 < interactionRadius*interactionRadius)
-			{
-				//Density
-				massDensity += particleMass*Wdeafult(distance2);
-
-				if(neighbours[i].count < kMaxNeighbourCount)
-				{
-					neighbours[i].particles[neighbours[i].count] = &bp;
-					neighbours[i].r[neighbours[i].count] = sqrt(distance2);
-					++neighbours[i].count;
-					//std::cout << "I'm on the border" << std::endl;
-				}
-			}
-		}
-		//loop over cells
-		for (int ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (int nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-				{
-					//do fancy math
-					//std::cout << "ppj x: " << ppj->m_x << std::endl;
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
-					float distance2 = dx*dx + dy*dy;
-
-					if(distance2 < interactionRadius*interactionRadius)
-					{
-						//Density
-						massDensity += particleMass*kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
-
-						if(neighbours[i].count < kMaxNeighbourCount)
-						{
-							neighbours[i].particles[neighbours[i].count] = ppj;
-							neighbours[i].r[neighbours[i].count] = sqrt(distance2);
-							++neighbours[i].count;
-						}
-					}
-				}
-			}
-		}
-		//save massDensity
-		pi.m_massDensity = massDensity;
-		//std::cout << massDensity << std::endl;
-		//save Pressure
-		pi.m_pressure = kstiffnes * (massDensity - restDensity);
-		//std::cout << pi.m_pressure << std::endl;
-	}
-
-
-	
-}
-
-float calculateMass()
-{
-	float density = 0.0f; 
-	
-
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		/* For Fredriks inferior integration
-		prevAcceleration[i].x = 0.0f;
-		prevAcceleration[i].y = 0.0f;
-
-		acceleration[i].x = 0.0f;
-		acceleration[i].y = 0.0f;
-		*/
-
-		//loop over cells 
-		for (size_t ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (size_t nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-				{
-					const particle& pj = *ppj;
-					//std::cout << "pi x:" << pi.m_x << std::endl;
-
-					//std::cout << "pj x:" << pj.m_x << std::endl;
-					float dx = pi.m_x - pj.m_x;
-					//std::cout << "dx: " << dx << std::endl;
-					float dy = pi.m_y - pj.m_y;
-					float distance2 = dx*dx + dy*dy;
-					if(distance2 < interactionRadius*interactionRadius)
-					{
-						density += kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
-					}
-				}
-			}
-		}
-	}
-	float dA = density/kParticlesCount;
-	float mass = (dA*restDensity)/(dA*dA);
-	for(size_t i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-		pi.m_mass = mass;
-	}
-	return mass;
-}
-
-float WKernel(float distance2)
-{
-	return 0.0f;
-}
-
-float Wdeafult(float distance2)
-{
-
-	float W = (315/(64*kPi*pow(interactionRadius,9))) * pow((pow(interactionRadius,2) -distance2),3);
-	return W;
-}
-
-float* WgradPressure(float dx, float dy)
-{
-	float W[2];
-	float distance2 = dx*dx + dy*dy;
-	
-	W[0] = -(45/(kPi*pow(interactionRadius,6)))*pow((interactionRadius-sqrt(distance2)),2)*(dx/sqrt(distance2));
-	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dy/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
-
-	return W;
-}
-
-float WlaplacianViscosity(float distance2)
-{
-	float W = (45/(kPi*pow(interactionRadius,6)))*(interactionRadius-sqrt(distance2));
-	return W;
-}
-
-float* WgradDefult(float dx, float dy)
-{
-	float W[2];
-	float distance2 = dx*dx + dy*dy;
-
-	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*pow((pow(interactionRadius,2)-distance2),2)*dx;
-	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dy*pow((pow(interactionRadius,2)-distance2),2);
-	
-	return W;
-}
-
-float WlaplacianDefult(float distance2)
-{
-	float W = -(945/(32*kPi*pow(interactionRadius,9)))*(pow(interactionRadius,2)-distance2)*(3*pow(interactionRadius,2)-7*distance2);
-	return W;
-}
