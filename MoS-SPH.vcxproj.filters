@@ -37,10 +37,10 @@
     <ClInclude Include="src\shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\vec2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\ParticleSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vec2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

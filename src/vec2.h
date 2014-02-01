@@ -8,7 +8,7 @@ struct vec2
 
     vec2(float _x, float _y): x(_x), y(_y){}
     vec2(const vec2 &v): x(v.x), y(v.y){}
-
+	
     inline vec2 operator - () const
     {
         return vec2(-x, -y);
@@ -48,7 +48,7 @@ struct vec2
         y /= scalar;
         return *this;
     }
-
+	
 };
 
 inline vec2 operator + (const vec2 &v1, const vec2 &v2)

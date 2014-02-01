@@ -2,17 +2,19 @@
 #include <random>
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include "vec2.h"
 
 #define kPi 3.14159265359
 
 
 ParticleSystem::ParticleSystem(void)
 {
-	
-	kDt = 0.00025;
+
+	kDt = 0.00025f;
 	firstIteration = true;
 	
-	interactionRadius = 0.035;
+	interactionRadius = 0.035f;
 	IR2 = interactionRadius*interactionRadius;
 	cellSize = (2.0f*interactionRadius);
 	
@@ -24,7 +26,7 @@ ParticleSystem::ParticleSystem(void)
 	
 	particlesInit();
 	borderParticlesInit();
-	
+
 	gridCoords.resize(particles.size()*2);
 	neighbours.resize(particles.size());
 	vhx.resize(particles.size());
@@ -57,6 +59,27 @@ ParticleSystem::ParticleSystem(void)
 
 ParticleSystem::~ParticleSystem(void)
 {
+}
+
+std::vector<vec2> ParticleSystem::getCoordinateVector()
+{
+	std::vector<vec2> coordinateVector(particles.size()+borderParticles.size());
+	for(int i = 0; i < particles.size(); ++i)
+	{
+		vec2 p;
+		p.x = particles[i].m_x;
+		p.y = particles[i].m_y;
+		coordinateVector[i] = p;
+	}
+	//#pragma omp parallel for schedule(dynamic)
+	for(int i = 0; i < borderParticles.size(); ++i)
+	{
+		vec2 p;
+		p.x = borderParticles[i].m_x;
+		p.y = borderParticles[i].m_y;
+		coordinateVector[particles.size() + i] = p;
+	}
+	return coordinateVector;
 }
 
 #define MAX_PARTICLES 1024
@@ -343,6 +366,7 @@ void ParticleSystem::calculateForces()
 
                         pi.m_x += vhx[i]*kDt;
                         pi.m_y += vhy[i]*kDt;
+						firstIteration = false;
                 }else{
                         vhx[i] += accelerationX*kDt;
                         vhy[i] += accelerationY*kDt;
@@ -351,8 +375,8 @@ void ParticleSystem::calculateForces()
                         pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
                         pi.m_x += vhx[i]*kDt;
                         pi.m_y += vhy[i]*kDt;
+
                 }
-				firstIteration = false;
 
 	}
 

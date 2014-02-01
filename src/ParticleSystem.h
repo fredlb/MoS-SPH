@@ -7,7 +7,9 @@ class ParticleSystem
 public:
 	ParticleSystem(void);
 	~ParticleSystem(void);
-	
+
+	std::vector<vec2> getCoordinateVector();
+
 	void particlesInit();
 	void borderParticlesInit();
 	float calculateMass();
@@ -35,7 +37,6 @@ public:
 	std::vector<particle> borderParticles;
 
 private:
-
 	#define kMaxNeighbourCount 64
 	struct Neighbours
 	{
