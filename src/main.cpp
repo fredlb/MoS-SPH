@@ -18,7 +18,8 @@
 #define _CRTDBG_MAP_ALLOC
 
 #define kParticlesCount 1024
-#define kBorderParticlesCount 300
+#define kBorderSideParticlesCount 300
+#define kBorderParticlesCount (4*kBorderSideParticlesCount)
 #define kWindowWidth 640
 #define kWindowHeight 480
 #define kPi 3.14159265359
@@ -26,13 +27,13 @@
 #define kFrameRate 60
 #define kSubSteps 7
 
-#define kOffset 0.5f
+#define kOffset 0.90f
 
 //#define kDt ((1.0f/kFrameRate) / kSubSteps)
 
 #define averageParticles 20
 //#define interactionRadius sqrt(averageParticles/(kParticlesCount*kPi))
-#define interactionRadius 0.035f
+#define interactionRadius 0.1f
 #define IR2 interactionRadius*interactionRadius
 #define cellSize (2.0f*interactionRadius)
 
@@ -71,10 +72,10 @@ const float kViewScale =  2.0f;
 
 
 
-const float kDt = 0.00025f;
+const float kDt = 0.0005f;
 const int kCellCount = 100;
 const float restDensity = 988.0f;
-const int kstiffnes = 100;
+const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
 const float damp = 0.2f;
@@ -347,17 +348,49 @@ void particlesInit()
 
 void borderParticlesInit()
 {
-	float stepLengthx = 2.0f/kBorderParticlesCount;
-	float stepLengthy = 2.0f/kBorderParticlesCount;
+	float stepLengthx = 2.0f/kBorderSideParticlesCount;
+	float stepLengthy = 2.0f/kBorderSideParticlesCount;
 
-	for(int i = 0; i < kBorderParticlesCount; i++)
+	float mass = 10.f;
+	float md = 100.0f;
+	float pressure = 0.01f;
+
+	for(int i = 0; i < kBorderSideParticlesCount; i++)
 	{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
 		borderParticles[i].m_y = -0.98f;
-		borderParticles[i].m_mass = 1;
-		borderParticles[i].m_massDensity = 10*restDensity;
-		borderParticles[i].m_pressure = kstiffnes*(9*restDensity);
+		borderParticles[i].m_mass = mass;
+		borderParticles[i].m_massDensity = md;
+		borderParticles[i].m_pressure = pressure;
 	}
+
+	for(int i = 0; i < kBorderSideParticlesCount; i++)
+	{
+		borderParticles[kBorderSideParticlesCount + i].m_x = -0.98f;
+		borderParticles[kBorderSideParticlesCount + i].m_y = (-1.0f) + stepLengthy*i;
+		borderParticles[kBorderSideParticlesCount + i].m_mass = mass;
+		borderParticles[kBorderSideParticlesCount + i].m_massDensity = md;
+		borderParticles[kBorderSideParticlesCount + i].m_pressure = pressure;
+	}
+
+	for(int i = 0; i < kBorderSideParticlesCount; i++)
+	{
+		borderParticles[2*kBorderSideParticlesCount + i].m_x = 0.98f;
+		borderParticles[2*kBorderSideParticlesCount + i].m_y = -1.0f + stepLengthy*i;
+		borderParticles[2*kBorderSideParticlesCount + i].m_mass = mass;
+		borderParticles[2*kBorderSideParticlesCount + i].m_massDensity = md;
+		borderParticles[2*kBorderSideParticlesCount + i].m_pressure = pressure;
+	}
+
+	for(int i = 0; i < kBorderSideParticlesCount; i++)
+	{
+		borderParticles[3*kBorderSideParticlesCount + i].m_x = -1.0f + stepLengthx*i;
+		borderParticles[3*kBorderSideParticlesCount + i].m_y = 0.98f;
+		borderParticles[3*kBorderSideParticlesCount + i].m_mass = mass;
+		borderParticles[3*kBorderSideParticlesCount + i].m_massDensity = md;
+		borderParticles[3*kBorderSideParticlesCount + i].m_pressure = pressure;
+	}
+
 }
 
 void updateGrid()
@@ -526,8 +559,8 @@ void calculatePressure()
 			if(distance2 < IR2)
 			{
 				//Density
-				massDensity += particleMass*Wdeafult(distance2);
-
+				//massDensity += particleMass*Wdeafult(distance2);
+				massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
 				if(neighbours[i].count < kMaxNeighbourCount)
 				{
 					neighbours[i].particles[neighbours[i].count] = &bp;
@@ -609,9 +642,9 @@ float calculateMass()
 					//std::cout << "dx: " << dx << std::endl;
 					float dy = pi.m_y - pj.m_y;
 					float distance2 = dx*dx + dy*dy;
-					if(distance2 < interactionRadius*interactionRadius)
+					if(distance2 < IR2)
 					{
-						density += kWdeafult* (interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2)*(interactionRadius*interactionRadius - distance2);
+						density += kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
 					}
 				}
 			}
