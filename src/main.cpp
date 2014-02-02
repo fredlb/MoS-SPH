@@ -13,7 +13,7 @@
 
 #include <vector>
 #include <math.h>
-#include <vld.h>
+//#include <vld.h>
 
 #define _CRTDBG_MAP_ALLOC
 
@@ -90,6 +90,8 @@ float accelerationY;
 float	pressureForcex,	pressureForcey,	viscosityForcex,
 		viscosityForcey,normalx, normaly, gradNormal,
 		surfaceTensionForcex,surfaceTensionForcey, gravity;
+
+float dx, dy, distance2;
 
 
 struct particle
@@ -351,7 +353,7 @@ void borderParticlesInit()
 	float stepLengthx = 2.0f/kBorderSideParticlesCount;
 	float stepLengthy = 2.0f/kBorderSideParticlesCount;
 
-	float mass = 10.f;
+	float mass = 0.1f;
 	float md = 100.0f;
 	float pressure = 0.01f;
 
@@ -359,7 +361,7 @@ void borderParticlesInit()
 	{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
 		borderParticles[i].m_y = -0.98f;
-		borderParticles[i].m_mass = mass;
+		borderParticles[i].m_mass = particleMass;
 		borderParticles[i].m_massDensity = md;
 		borderParticles[i].m_pressure = pressure;
 	}
@@ -454,19 +456,18 @@ void calulateForces()
 				for(int j=0; j < neighbours[i].count; ++j)
 				{
 					const particle* ppj = neighbours[i].particles[j];
-					float massi = pi.m_mass;
 					float massj = ppj->m_mass;
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
-					float distance2 = dx*dx + dy*dy;
+					dx = pi.m_x - ppj->m_x;
+					dy = pi.m_y - ppj->m_y;
+					distance2 = dx*dx + dy*dy;
 					if(distance2 < IR2)
 					{
 						mdj = ppj->m_massDensity;
 
-						normalx += (particleMass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dx;
-						normaly += (particleMass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dy;
+						normalx += (massj/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dx;
+						normaly += (massj/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dy;
 
-						gradNormal += (particleMass/mdj)*kWlaplacianDefult*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2);
+						gradNormal += (massj/mdj)*kWlaplacianDefult*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2);
 
 						if( distance2 != 0)
 						{
@@ -477,11 +478,11 @@ void calulateForces()
 
 							float pressi = pi.m_pressure;
 							float pressj = ppj->m_pressure;
-							pressureForcex += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
-							pressureForcey += ((pressi/pow(mdi,2))+(pressj/pow(mdj,2)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
+							pressureForcex += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
+							pressureForcey += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
 
-							viscosityForcex += velocityDiffu * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
-							viscosityForcey += velocityDiffv * (particleMass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+							viscosityForcex += velocityDiffu * (massj/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+							viscosityForcey += velocityDiffv * (massj/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
 
 						}
 					}
@@ -580,9 +581,9 @@ void calculatePressure()
 				{
 					//do fancy math
 					//std::cout << "ppj x: " << ppj->m_x << std::endl;
-					float dx = pi.m_x - ppj->m_x;
-					float dy = pi.m_y - ppj->m_y;
-					float distance2 = dx*dx + dy*dy;
+					dx = pi.m_x - ppj->m_x;
+					dy = pi.m_y - ppj->m_y;
+					distance2 = dx*dx + dy*dy;
 
 					if(distance2 < IR2)
 					{
@@ -635,13 +636,9 @@ float calculateMass()
 				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
 				{
 					const particle& pj = *ppj;
-					//std::cout << "pi x:" << pi.m_x << std::endl;
-
-					//std::cout << "pj x:" << pj.m_x << std::endl;
-					float dx = pi.m_x - pj.m_x;
-					//std::cout << "dx: " << dx << std::endl;
-					float dy = pi.m_y - pj.m_y;
-					float distance2 = dx*dx + dy*dy;
+					dx = pi.m_x - pj.m_x;
+					dy = pi.m_y - pj.m_y;
+					distance2 = dx*dx + dy*dy;
 					if(distance2 < IR2)
 					{
 						density += kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
@@ -658,50 +655,4 @@ float calculateMass()
 		pi.m_mass = mass;
 	}
 	return mass;
-}
-
-float WKernel(float distance2)
-{
-	return 0.0f;
-}
-
-float Wdeafult(float distance2)
-{
-
-	float W = (315/(64*kPi*pow(interactionRadius,9))) * pow((pow(interactionRadius,2) -distance2),3);
-	return W;
-}
-
-float* WgradPressure(float dx, float dy)
-{
-	float W[2];
-	float distance2 = dx*dx + dy*dy;
-	
-	W[0] = -(45/(kPi*pow(interactionRadius,6)))*pow((interactionRadius-sqrt(distance2)),2)*(dx/sqrt(distance2));
-	W[1] = -(45/(kPi*pow(interactionRadius,6)))*(dy/sqrt(distance2))*pow((interactionRadius-sqrt(distance2)),2);
-
-	return W;
-}
-
-float WlaplacianViscosity(float distance2)
-{
-	float W = (45/(kPi*pow(interactionRadius,6)))*(interactionRadius-sqrt(distance2));
-	return W;
-}
-
-float* WgradDefult(float dx, float dy)
-{
-	float W[2];
-	float distance2 = dx*dx + dy*dy;
-
-	W[0] = -(945/(32*kPi*pow(interactionRadius,9)))*pow((pow(interactionRadius,2)-distance2),2)*dx;
-	W[1] = -(945/(32*kPi*pow(interactionRadius,9)))*dy*pow((pow(interactionRadius,2)-distance2),2);
-	
-	return W;
-}
-
-float WlaplacianDefult(float distance2)
-{
-	float W = -(945/(32*kPi*pow(interactionRadius,9)))*(pow(interactionRadius,2)-distance2)*(3*pow(interactionRadius,2)-7*distance2);
-	return W;
 }
