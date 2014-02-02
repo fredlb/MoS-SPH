@@ -361,7 +361,7 @@ void borderParticlesInit()
 	{
 		borderParticles[i].m_x = -1.0f + stepLengthx*i;
 		borderParticles[i].m_y = -0.98f;
-		borderParticles[i].m_mass = particleMass;
+		borderParticles[i].m_mass = mass;
 		borderParticles[i].m_massDensity = md;
 		borderParticles[i].m_pressure = pressure;
 	}
