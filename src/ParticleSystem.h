@@ -2,83 +2,53 @@
 #include <vector>
 #include "vec2.h"
 
+using namespace std;
+
 class ParticleSystem
 {
 public:
 	ParticleSystem(void);
 	~ParticleSystem(void);
 
-	std::vector<vec2> getCoordinateVector();
-
-	void particlesInit();
-	void borderParticlesInit();
-	float calculateMass();
-
-	void updateGrid();
-	void calculatePressure();
-	void calculateForces();
+	std::vector<vec2> getParticleCoordinates();
 	void advance();
-
-	struct particle
-	{
-		float m_x;
-		float m_y;
-		float m_u; //x-velocity
-		float m_v; //y-velocity
-
-		float m_massDensity;
-		float m_pressure;
-
-		float m_mass;
-
-		particle* next;
-	};
-	std::vector<particle> particles;
-	std::vector<particle> borderParticles;
+	void moveParticleTo(float x, float y);
+	void moveParticleTo(vec2 xy);
 
 private:
-	#define kMaxNeighbourCount 64
-	struct Neighbours
+	#define MAX_NEIGHBOURS 128
+	struct particle
 	{
-		const particle* particles[kMaxNeighbourCount];
-		float r[kMaxNeighbourCount];
-		size_t count;
+		//physical properties
+		vec2 position;
+		vec2 velocity;
+		vec2 velocity_eval;
+		vec2 force;
+		float pressure;
+		float density;
+
+		//neighbour list
+		particle* neighbours[MAX_NEIGHBOURS];
+		float neighbour_distance[MAX_NEIGHBOURS];
+		size_t neighbour_count;
+
+
+		//for grid linked list
+		particle* next;
+		//grid coordinates
+		size_t grid_x;
+		size_t grid_y;
 	};
-	float kDt;
-	bool firstIteration;
+	vector<particle> particles;
+	vector<particle*> grid;
 
-	float interactionRadius;
-	float IR2;
-	float cellSize;
-	std::vector<particle*> grid;
-	size_t gridWidth;
-	size_t gridHeight;
-	size_t gridCellCount;
+	void createParticleField();
+	void updateGrid();
+	void updateNeighbours();
+	void calculatePressure();
+	void calculateSPHForce();
+	void moveParticles();
 
-	std::vector<Neighbours> neighbours;
-	std::vector<int> gridCoords;
-
-	std::vector<float> vhx;
-	std::vector<float> vhy;
-
-	float particleMass;
-
-	float Wdefault(float distance2);
-	float kWdefault;
-	float kWgradDefault;
-	float kWlaplacianDefault;
-	float kWlaplacianViscosity;
-	float kWgradPressure;
-
-	int averageParticles;
-
-	float viscosityConstant;
-	float restDensity;
-	float surfaceLimit;
-	float surfaceTension;
-
-	float stiffness;
-
-	float g;
+	long int advance_call;
 };
 

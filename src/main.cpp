@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <GL/freeglut.h>
+#include <string>
 
 #include "shader.h"
 #include "ParticleSystem.h"
@@ -11,8 +12,6 @@
 
 #define kWindowWidth 640
 #define kWindowHeight 480
-
-#define kSubSteps 7
 
 void render();
 void update();
@@ -28,10 +27,13 @@ const float kViewScale =  2.0f;
 
 GLuint programID = 0;
 std::vector<vec2> pointsToDraw;
+int current_time;
 
 int main (int argc, char** argv) {
-	simulation = new ParticleSystem();
+	current_time = glutGet(GLUT_ELAPSED_TIME);
 
+	simulation = new ParticleSystem();
+	//for(int i=0; i<1; i++) simulation->advance();
 	glutInitWindowSize(kWindowWidth, kWindowHeight);
 	glutInit(&argc, argv);
 	glutInitDisplayString("samples stencil>=3 rgb double depth");
@@ -39,15 +41,15 @@ int main (int argc, char** argv) {
 	glutDisplayFunc(render);
 	glutIdleFunc(update);
                
-  // start GLEW extension handler
-  glewExperimental = GL_TRUE;
-  glewInit ();
+	// start GLEW extension handler
+	glewExperimental = GL_TRUE;
+	glewInit ();
 
-  // get version info
-  const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
-  const GLubyte* version = glGetString (GL_VERSION); // version as a string
-  printf ("Renderer: %s\n", renderer);
-  printf ("OpenGL version supported %s\n", version);
+	// get version info
+	const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
+	const GLubyte* version = glGetString (GL_VERSION); // version as a string
+	printf ("Renderer: %s\n", renderer);
+	printf ("OpenGL version supported %s\n", version);
 
 
 
@@ -70,12 +72,16 @@ void glInit()
 
 void render()
 {
+	std::string s = "Time per frame: " + std::to_string(glutGet(GLUT_ELAPSED_TIME) - current_time);
+	glutSetWindowTitle(s.c_str());
+	current_time = glutGet(GLUT_ELAPSED_TIME);
+
     glClearColor(0.05f, 0.05f, 0.05f, 1);
 	glClear (GL_COLOR_BUFFER_BIT);
 	glUseProgram (programID);
     
 	glBindBuffer (GL_ARRAY_BUFFER, vbo);
-	pointsToDraw = simulation->getCoordinateVector();
+	pointsToDraw = simulation->getParticleCoordinates();
 	glBufferData (GL_ARRAY_BUFFER, (pointsToDraw.size()) * sizeof(vec2), &pointsToDraw[0], GL_STATIC_DRAW);
 	glBindVertexArray (vao);
     //glBindVertexArray (vao);
@@ -104,10 +110,9 @@ void render()
 
 void update()
 {
-	for(int i = 0; i < kSubSteps; ++i)
+	for(int i = 0; i < 3; ++i)
 	{
 		simulation->advance();
-
 	}
 	glutPostRedisplay();
 }
