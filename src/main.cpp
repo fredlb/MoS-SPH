@@ -44,17 +44,12 @@ void particlesInit();
 void borderParticlesInit();
 void drawGrid();
 void updateGrid();
+void updatNeighbours();
 void createDrawablePoints();
 void calculatePressure();
 void calulateForces();
-
 float calculateMass();
 
-float Wdeafult(float distance2);
-float* WgradPressure(float dx, float dy);
-float WlaplacianViscosity(float distance2);
-float* WgradDefult(float dx, float dy);
-float WlaplacianDefult(float distance2);
 
 const float kWdeafult = (315/(64*kPi*pow(interactionRadius,9))); 
 const float kWgradPressure = -(45/(kPi*pow(interactionRadius,6)));
@@ -78,10 +73,8 @@ const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
 const float viscosityConstant = 3.5f;
-const float damp = 0.2f;
 
 float particleMass;
-
 float surfaceLimit = sqrt(restDensity/averageParticles);
 float accelerationX;
 float accelerationY;
@@ -113,7 +106,7 @@ struct particle
 struct Neighbours
 {
     const particle* particles[kMaxNeighbourCount];
-    float r[kMaxNeighbourCount];
+    float r2[kMaxNeighbourCount];
     size_t count;
 };
 
@@ -131,8 +124,6 @@ const size_t kGridHeight = (size_t)(2.0 / cellSize);
 const size_t kGridCellCount = kGridWidth * kGridHeight;
 size_t gridCoords[kParticlesCount*2];
 std::vector<particle*> grid;
-
-
 
 std::vector<point> drawablePoints;
 std::vector<point> DEBUG_CORNER;
@@ -211,6 +202,7 @@ int main () {
 	  for(int i = 0; i < kSubSteps; ++i)
 	  {
 		  updateGrid();
+		  updatNeighbours();
 		  calculatePressure();
 		  calulateForces();
 		  //integrate();
@@ -273,8 +265,6 @@ void glInit()
 
 }
 
-
-
 void createDrawablePoints()
 {
 	
@@ -327,7 +317,6 @@ void render()
     glDrawArrays (GL_POINTS, 0, kParticlesCount + kBorderParticlesCount);
 	//glDisableVertexAttribArray(0);
 }
-
 
 void particlesInit()
 {
@@ -425,6 +414,97 @@ void updateGrid()
 	}
 }
 
+void updatNeighbours()
+{
+	for(int i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
+
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
+		
+		neighbours[i].count = 0;
+		
+		//Loop over border
+		for(size_t j = 0; j < kBorderParticlesCount; j++)
+		{
+			particle& bp = borderParticles[j];
+			float pm = bp.m_mass;
+
+			float dx = pi.m_x - bp.m_x;
+			float dy = pi.m_y - bp.m_y;
+			float distance2 = dx*dx + dy*dy;
+
+			if(distance2 < IR2)
+			{
+				if(neighbours[i].count < kMaxNeighbourCount)
+				{
+					neighbours[i].particles[neighbours[i].count] = &bp;
+					neighbours[i].r2[neighbours[i].count] = distance2;
+					++neighbours[i].count;
+					//std::cout << "I'm on the border" << std::endl;
+				}
+			}
+		}
+		//loop over cells
+		for (int ni=gi-1; ni<=gi+1; ++ni)
+		{
+			for (int nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
+			{
+				//loop over neighbors
+				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
+				{
+					//do fancy math
+					//std::cout << "ppj x: " << ppj->m_x << std::endl;
+					dx = pi.m_x - ppj->m_x;
+					dy = pi.m_y - ppj->m_y;
+					distance2 = dx*dx + dy*dy;
+
+					if(distance2 < IR2)
+					{
+						//Density
+						//massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
+
+						if(neighbours[i].count < kMaxNeighbourCount)
+						{
+							neighbours[i].particles[neighbours[i].count] = ppj;
+							neighbours[i].r2[neighbours[i].count] =distance2;
+							++neighbours[i].count;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void calculatePressure()
+{
+	for(int i = 0; i < kParticlesCount; ++i)
+	{
+		particle& pi = particles[i];
+
+		float massDensity = 0.0f;
+		//loop over neighbours 
+		for(int j=0; j < neighbours[i].count; ++j)
+		{
+			const particle* ppj = neighbours[i].particles[j];
+			float mass = ppj->m_mass;
+			distance2 = neighbours[i].r2[j];
+
+			if(distance2 < IR2)
+			{
+				massDensity += mass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
+			}
+		}
+		pi.m_massDensity = massDensity;
+		pi.m_pressure = kstiffnes * (massDensity - restDensity);
+	}
+}
+
 void calulateForces()
 {
 	//Force loop
@@ -432,9 +512,6 @@ void calulateForces()
 	for(int i = 0; i < kParticlesCount; ++i)
 	{
 		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
 
 		pressureForcex = 0.0f; 
 		pressureForcey = 0.0f;
@@ -452,37 +529,40 @@ void calulateForces()
 		float mdi = pi.m_massDensity;
 		float mdj = 0.0f;
 		gravity = g*mdi;
+
 		//loop over neighbours 
 				for(int j=0; j < neighbours[i].count; ++j)
 				{
 					const particle* ppj = neighbours[i].particles[j];
-					float massj = ppj->m_mass;
-					dx = pi.m_x - ppj->m_x;
-					dy = pi.m_y - ppj->m_y;
-					distance2 = dx*dx + dy*dy;
+					float mass = ppj->m_mass;
+
+					distance2 = neighbours[i].r2[j];
 					if(distance2 < IR2)
 					{
 						mdj = ppj->m_massDensity;
 
-						normalx += (massj/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dx;
-						normaly += (massj/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dy;
+						normalx += (mass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dx;
+						normaly += (mass/mdj)*kWgradDefult*(IR2-distance2)*(IR2-distance2)*dy;
 
-						gradNormal += (massj/mdj)*kWlaplacianDefult*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2);
+						gradNormal += (mass/mdj)*kWlaplacianDefult*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2);
 
 						if( distance2 != 0)
 						{
 							float distance = sqrt(distance2);
+							dx = pi.m_x - ppj->m_x;
+							dy = pi.m_y - ppj->m_y;
 							// uj - ui
 							float velocityDiffu = ppj->m_u - pi.m_u;
 							float velocityDiffv = ppj->m_v - pi.m_v;
 
 							float pressi = pi.m_pressure;
 							float pressj = ppj->m_pressure;
+
 							pressureForcex += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
 							pressureForcey += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
 
-							viscosityForcex += velocityDiffu * (massj/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
-							viscosityForcey += velocityDiffv * (massj/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+							viscosityForcex += velocityDiffu * (mass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
+							viscosityForcey += velocityDiffv * (mass/mdj) * kWlaplacianViscosity*(interactionRadius-distance);
 
 						}
 					}
@@ -527,89 +607,6 @@ void calulateForces()
 	}
 
 		
-}
-
-void calculatePressure()
-{
-	//Mass-density and pressure loop
-
-	
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		float massDensity = 0.0f;
-		neighbours[i].count = 0;
-		
-		//Loop over border
-		for(size_t j = 0; j < kBorderParticlesCount; j++)
-		{
-			particle& bp = borderParticles[j];
-			float pm = bp.m_mass;
-
-			float dx = pi.m_x - bp.m_x;
-			float dy = pi.m_y - bp.m_y;
-			float distance2 = dx*dx + dy*dy;
-
-			if(distance2 < IR2)
-			{
-				//Density
-				//massDensity += particleMass*Wdeafult(distance2);
-				massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
-				if(neighbours[i].count < kMaxNeighbourCount)
-				{
-					neighbours[i].particles[neighbours[i].count] = &bp;
-					neighbours[i].r[neighbours[i].count] = sqrt(distance2);
-					++neighbours[i].count;
-					//std::cout << "I'm on the border" << std::endl;
-				}
-			}
-		}
-		//loop over cells
-		for (int ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (int nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-				{
-					//do fancy math
-					//std::cout << "ppj x: " << ppj->m_x << std::endl;
-					dx = pi.m_x - ppj->m_x;
-					dy = pi.m_y - ppj->m_y;
-					distance2 = dx*dx + dy*dy;
-
-					if(distance2 < IR2)
-					{
-						//Density
-						massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
-
-						if(neighbours[i].count < kMaxNeighbourCount)
-						{
-							neighbours[i].particles[neighbours[i].count] = ppj;
-							neighbours[i].r[neighbours[i].count] = sqrt(distance2);
-							++neighbours[i].count;
-						}
-					}
-				}
-			}
-		}
-		//save massDensity
-		pi.m_massDensity = massDensity;
-		//std::cout << massDensity << std::endl;
-		//save Pressure
-		pi.m_pressure = kstiffnes * (massDensity - restDensity);
-		//std::cout << pi.m_pressure << std::endl;
-	}
-
-
-	
 }
 
 float calculateMass()
