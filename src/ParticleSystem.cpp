@@ -15,8 +15,8 @@
 #define SIM_WIDTH 2.0
 #define SIM_HEIGHT 2.0
 
-#define SIM_SCALE 0.05
-#define TIME_STEP 0.0003 //s
+#define SIM_SCALE 0.1
+#define TIME_STEP 0.001 //s
 #define INTERACTION_RADIUS 0.01 //m
 #define INTERACTION_RADIUS2 INTERACTION_RADIUS*INTERACTION_RADIUS
 
@@ -26,11 +26,16 @@
 
 #define PI 3.1415926535f
 #define MAX_PARTICLES 1024
+#define EPSILON	0.000001f			//for collision detection
+
 
 #define STIFFNESS 0.50 //
 #define VISCOSITY 0.2 // pascal-seconds
 #define PARTICLE_MASS 0.00020543 //kg
 #define REST_DENSITY 600.0 //kg / m^3
+#define VEL_LIMIT 200.0 //velocity limit (m/s)
+#define PARTICLE_RADIUS 0.004 // m
+#define EXT_DAMP 64.0
 
 const float W_DEFAULT = 315.0f / (64.0f * 3.141592 * pow( INTERACTION_RADIUS, 9) );
 const float	W_GRAD_PRESSURE = -45.0f / (3.141592 * pow( INTERACTION_RADIUS, 6) );
@@ -38,7 +43,7 @@ const float W_LAPLACIAN_VISCOSITY = 45.0f / (3.141592 * pow( INTERACTION_RADIUS,
 
 ParticleSystem::ParticleSystem(void)
 {
-	particles.reserve(MAX_PARTICLES);
+	particles.resize(MAX_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
 	createParticleField();
 	advance_call = 0;
@@ -48,6 +53,7 @@ std::vector<vec2> ParticleSystem::getParticleCoordinates()
 {
 	
 	//standard
+	
 	std::vector<vec2> coordinateVector(particles.size());
 	for(int i = 0; i < particles.size(); ++i)
 	{
@@ -57,14 +63,14 @@ std::vector<vec2> ParticleSystem::getParticleCoordinates()
 	
 	//grid test
 	/*
-	int grid_index = (advance_call/10)%grid.size();
+	int grid_index = (advance_call)%grid.size();
 	std::vector<vec2> coordinateVector;
 	int j=0;
 	for (particle* ppj=grid[grid_index]; ppj != 0; ppj=ppj->next)
 	{
 		coordinateVector.push_back(ppj->position);
-	}
-	*/
+	}*/
+	
 	/*
 	//neighbour test
 	int particle_index = (advance_call/10)%MAX_PARTICLES;
@@ -72,8 +78,8 @@ std::vector<vec2> ParticleSystem::getParticleCoordinates()
 	for(int i = 0; i < particles[particle_index].neighbour_count; ++i)
 	{
 		coordinateVector[i] = particles[particle_index].neighbours[i]->position;
-	}
-	*/
+	}*/
+	
 	return coordinateVector;
 	
 
@@ -87,11 +93,11 @@ void ParticleSystem::createParticleField()
 	int rowcolSize = sqrt(MAX_PARTICLES);
 	for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
 	{
-		float stepLength = 1.5f/rowcolSize;
+		float stepLength = 1.0f/rowcolSize;
 		for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 		{
-			particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = -0.9 + particleIndexCol*stepLength;
-			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = -0.9 + particleIndexRow*stepLength;
+			particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = -0.98 + particleIndexCol*stepLength;
+			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = -0.98 + particleIndexRow*stepLength;
 		}
 	}
 }
@@ -159,10 +165,10 @@ void ParticleSystem::updateNeighbours()
 
 void ParticleSystem::calculatePressure()
 {
-	float sum, c;
+	//float c;
 	for(particle& pi : particles)
 	{
-		sum = 0.0;
+		float sum = 0.0;
 		for(int i=0; i < pi.neighbour_count; i++)
 		{
 			particle& pj = *(pi.neighbours[i]);
@@ -170,7 +176,7 @@ void ParticleSystem::calculatePressure()
 			float distance2 = dot(distance_vector,distance_vector);
 			if(distance2 < INTERACTION_RADIUS2)
 			{
-				c = (INTERACTION_RADIUS2 - distance2);
+				float c = (INTERACTION_RADIUS2 - distance2);
 				sum += c*c*c;
 			}
 		}
@@ -203,17 +209,109 @@ void ParticleSystem::calculateSPHForce()
 void ParticleSystem::moveParticles()
 {
 	
+	float speed,diff,adj;
+
+	float current, u, v, cp, n,d;
+
+	float SL2 = VEL_LIMIT*VEL_LIMIT;
+	vec2 norm;
+
+	
 	for(particle& pi : particles)
 	{
 
 		vec2 acceleration = pi.force*PARTICLE_MASS;
 		
+		
+		
+		speed = acceleration.x*acceleration.x + acceleration.y*acceleration.y;
+		if(speed > SL2)
+		{
+			acceleration *= VEL_LIMIT / sqrt(speed);
+		}
+		
+		/*
+		if(pi.position.y < -1)
+		{
+			current = pi.position.y;
+			u = pi.velocity.x;
+			v = pi.velocity.y;
+			cp = -1;
+
+			d = sqrt((cp-current)*(cp-current));
+			n = 1;
+			pi.position.x = cp + d*n;
+			pi.velocity_eval.y = v - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
+			pi.velocity_eval.x = u;
+		}*/
+		
+		acceleration.y += -9.81;
+
+		diff = 2 * PARTICLE_RADIUS - (pi.position.y - BORDER_LEFT)*SIM_SCALE;
+		if( diff > EPSILON)
+		{
+			norm.x = 0.0f;
+			norm.y = 1.0f;
+
+			adj = STIFFNESS * diff - EXT_DAMP * dot(norm, pi.velocity_eval);
+			acceleration.x += adj * norm.x;
+			acceleration.y += adj * norm.y;
+		}
+
+		diff = 2 * PARTICLE_RADIUS - (BORDER_RIGHT - pi.position.y)*SIM_SCALE;
+		if( diff > EPSILON)
+		{
+			norm.x = 0.0f;
+			norm.y = -1.0f;
+
+			adj = STIFFNESS * diff - EXT_DAMP * dot(norm, pi.velocity_eval);
+			acceleration.x += adj * norm.x;
+			acceleration.y += adj * norm.y;
+		}
+
+		diff = 2 * PARTICLE_RADIUS - (pi.position.x - BORDER_LEFT)*SIM_SCALE;
+		if( diff > EPSILON)
+		{
+			norm.x = 1.0f;
+			norm.y = 0.0f;
+
+			adj = STIFFNESS * diff - EXT_DAMP * dot(norm, pi.velocity_eval);
+			acceleration.x += adj * norm.x;
+			acceleration.y += adj * norm.y;
+		}
+
+		diff = 2 * PARTICLE_RADIUS - (BORDER_RIGHT - pi.position.x)*SIM_SCALE;
+		if( diff > EPSILON)
+		{
+			norm.x = -1.0f;
+			norm.y = 0.0f;
+
+			adj = STIFFNESS * diff - EXT_DAMP * dot(norm, pi.velocity_eval);
+			acceleration.x += adj * norm.x;
+			acceleration.y += adj * norm.y;
+		}
+		
+
+		if(pi.position.y < -1.0f)
+			pi.position.y = -1.0f;
+
+		if(pi.position.x < -1.0f)
+			pi.position.x = -1.0f;
+
+		if(pi.position.x > 1.0f)
+			pi.position.x = 1.0f;
+
+		
+
 		//leapfrog integration
 		vec2 velocity_next = pi.velocity + acceleration*TIME_STEP;
 		pi.velocity_eval = (2.0*pi.velocity + acceleration*TIME_STEP)*0.5;
 		pi.velocity = velocity_next;
 		velocity_next *= TIME_STEP/(SIM_SCALE);
 		pi.position += velocity_next;
+
+		
+
 	}
 
 }
