@@ -18,6 +18,7 @@
 #define SIM_SCALE 0.1
 #define TIME_STEP 0.001 //s
 #define INTERACTION_RADIUS 0.01 //m
+
 #define INTERACTION_RADIUS2 INTERACTION_RADIUS*INTERACTION_RADIUS
 
 #define CELL_SIZE (INTERACTION_RADIUS/SIM_SCALE)
@@ -29,13 +30,15 @@
 #define EPSILON	0.000001f			//for collision detection
 
 
-#define STIFFNESS 0.50 //
+#define STIFFNESS 1.0 //
 #define VISCOSITY 0.2 // pascal-seconds
 #define PARTICLE_MASS 0.00020543 //kg
+
 #define REST_DENSITY 600.0 //kg / m^3
 #define VEL_LIMIT 200.0 //velocity limit (m/s)
 #define PARTICLE_RADIUS 0.004 // m
 #define EXT_DAMP 64.0
+
 
 const float W_DEFAULT = 315.0f / (64.0f * 3.141592 * pow( INTERACTION_RADIUS, 9) );
 const float	W_GRAD_PRESSURE = -45.0f / (3.141592 * pow( INTERACTION_RADIUS, 6) );
@@ -98,6 +101,7 @@ void ParticleSystem::createParticleField()
 		{
 			particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = -0.98 + particleIndexCol*stepLength;
 			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = -0.98 + particleIndexRow*stepLength;
+
 		}
 	}
 }
@@ -154,12 +158,12 @@ void ParticleSystem::updateNeighbours()
 								pi.neighbours[pi.neighbour_count] = ppj;
 								pi.neighbour_distance[pi.neighbour_count] = sqrt(distance2);
 								++pi.neighbour_count;
-/*näsa*/					}
-	/***/				}
-	  /**/			}
-	/**/		}
-  /**/		}
-/**/	}
+/*näs**/					}
+	/*b*/				}
+	  /*o*/			}
+	/*r*/		}
+  /*r*/		}
+/*e*/	}
 	}
 }
 
@@ -197,10 +201,10 @@ void ParticleSystem::calculateSPHForce()
 			vec2 distance_vector = (pi.position - pj.position)*SIM_SCALE;
 			float distance2 = dot(distance_vector,distance_vector);
 			float c = ( INTERACTION_RADIUS - pi.neighbour_distance[i] );
-			float pterm = -0.5f * c * W_GRAD_PRESSURE * (pi.pressure + pj.pressure) / pi.neighbour_distance[i];
-			float dterm = c * pi.density * pj.density;
-			float vterm = W_LAPLACIAN_VISCOSITY * VISCOSITY;
-			force += ( pterm * distance_vector + vterm * (pj.velocity_eval - pi.velocity_eval) ) * dterm;
+			float pressure_term = -0.5f * c * W_GRAD_PRESSURE * (pi.pressure + pj.pressure) / pi.neighbour_distance[i];
+			float density_term = c * pi.density * pj.density;
+			float viscosity_term = W_LAPLACIAN_VISCOSITY * VISCOSITY;
+			force += ( pressure_term * distance_vector + viscosity_term * (pj.velocity_eval - pi.velocity_eval) ) * density_term;
 		}
 		pi.force = force;
 	}
@@ -221,9 +225,7 @@ void ParticleSystem::moveParticles()
 	{
 
 		vec2 acceleration = pi.force*PARTICLE_MASS;
-		
-		
-		
+
 		speed = acceleration.x*acceleration.x + acceleration.y*acceleration.y;
 		if(speed > SL2)
 		{
@@ -300,8 +302,6 @@ void ParticleSystem::moveParticles()
 
 		if(pi.position.x > 1.0f)
 			pi.position.x = 1.0f;
-
-		
 
 		//leapfrog integration
 		vec2 velocity_next = pi.velocity + acceleration*TIME_STEP;

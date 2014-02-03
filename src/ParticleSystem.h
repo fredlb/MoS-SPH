@@ -40,6 +40,7 @@ private:
 		size_t grid_y;
 	};
 	vector<particle> particles;
+	vector<particle> border_particles;
 	vector<particle*> grid;
 
 	void createParticleField();
