@@ -71,6 +71,7 @@ xcopy /y "$(ProjectDir)src\*.frag" "$(OutDir)"</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <CompileAs>Default</CompileAs>
       <OpenMPSupport>true</OpenMPSupport>
+      <BrowseInformation>true</BrowseInformation>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -82,6 +83,9 @@ xcopy /y "$(ProjectDir)src\*.frag" "$(OutDir)"</Command>
       <Command>xcopy /y "$(ProjectDir)src\*.vert" "$(OutDir)" 
 xcopy /y "$(ProjectDir)src\*.frag" "$(OutDir)"</Command>
     </PostBuildEvent>
+    <Bscmake>
+      <PreserveSbr>true</PreserveSbr>
+    </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="src\default.vert" />

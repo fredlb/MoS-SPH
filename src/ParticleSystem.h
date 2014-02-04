@@ -11,12 +11,17 @@ public:
 	~ParticleSystem(void);
 
 	std::vector<vec2> getParticleCoordinates();
+	std::vector<vec2> getParticleCoordinatesNeighbours();
+	std::vector<vec2> getParticleCoordinatesGrid();
+#define PRESSURE_UNDER 1.0
+#define PRESSURE_OVER -1.0
+	std::vector<vec2> getParticleCoordinatesPressure(float dir, float limit);
 	void advance();
-	void moveParticleTo(float x, float y);
-	void moveParticleTo(vec2 xy);
+	long int draw_counter;
+	void drawParticle(float x, float y, bool is_static);
 
 private:
-	#define MAX_NEIGHBOURS 128
+	#define MAX_NEIGHBOURS 32
 	struct particle
 	{
 		//physical properties
@@ -38,6 +43,9 @@ private:
 		//grid coordinates
 		size_t grid_x;
 		size_t grid_y;
+
+		//is moving particle
+		bool is_static;
 	};
 	vector<particle> particles;
 	vector<particle> border_particles;
@@ -46,8 +54,10 @@ private:
 	void createParticleField();
 	void updateGrid();
 	void updateNeighbours();
+	void updateNeighbours2();
 	void calculatePressure();
 	void calculateSPHForce();
+	void calculateMass();
 	void moveParticles();
 
 	long int advance_call;

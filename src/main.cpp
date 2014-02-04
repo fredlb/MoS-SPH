@@ -1,10 +1,11 @@
 #include <stdlib.h>
-#include <GL/glew.h> // include GLEW and new version of GL on Windows
 #include <stdio.h>
 #include <iostream>
 #include <vector>
-#include <GL/freeglut.h>
 #include <string>
+
+#include <GL/glew.h> // include GLEW and new version of GL on Windows
+#include <GL/freeglut.h>
 
 #include "shader.h"
 #include "ParticleSystem.h"
@@ -13,6 +14,7 @@
 #define kWindowWidth 640
 #define kWindowHeight 480
 
+void drawPoints(vector<vec2> points, float r, float g, float b, float a, float size);
 void render();
 void update();
 void glInit();
@@ -31,7 +33,6 @@ int current_time;
 
 int main (int argc, char** argv) {
 	current_time = glutGet(GLUT_ELAPSED_TIME);
-
 	simulation = new ParticleSystem();
 	//for(int i=0; i<1; i++) simulation->advance();
 	glutInitWindowSize(kWindowWidth, kWindowHeight);
@@ -75,16 +76,35 @@ void render()
 	std::string s = "Time per frame: " + std::to_string(glutGet(GLUT_ELAPSED_TIME) - current_time);
 	glutSetWindowTitle(s.c_str());
 	current_time = glutGet(GLUT_ELAPSED_TIME);
-
-    glClearColor(0.05f, 0.05f, 0.05f, 1);
+	glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
 	glClear (GL_COLOR_BUFFER_BIT);
-	glUseProgram (programID);
-    
-	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	//draw points here
 	pointsToDraw = simulation->getParticleCoordinates();
-	glBufferData (GL_ARRAY_BUFFER, (pointsToDraw.size()) * sizeof(vec2), &pointsToDraw[0], GL_STATIC_DRAW);
+	drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 5.0);
+	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_UNDER,150.0), 1.0, 0.0, 0.0, 0.5, 5.0);
+	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_OVER,150.0), 0.0, 1.0, 0.0, 0.5, 5.0);
+	//stop drawing here
+	glutSwapBuffers();
+}
+
+void update()
+{
+	for(int i = 0; i < 3; ++i)
+	{
+		simulation->advance();
+	}
+	glutPostRedisplay();
+}
+
+void drawPoints(vector<vec2> points, float r, float g, float b, float a, float size)
+{
+	glUseProgram (programID);
+	GLint loc = glGetUniformLocation(programID, "uColor");
+    glUniform4f(loc, r, g, b, a);
+
+	glBindBuffer (GL_ARRAY_BUFFER, vbo);
+	glBufferData (GL_ARRAY_BUFFER, (points.size()) * sizeof(vec2), &points[0], GL_STATIC_DRAW);
 	glBindVertexArray (vao);
-    //glBindVertexArray (vao);
 	glEnableVertexAttribArray (0);
 	glBindBuffer (GL_ARRAY_BUFFER, vbo);
 	glVertexAttribPointer (0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
@@ -99,20 +119,8 @@ void render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glPointSize(5.0f);
+    glPointSize(size);
 
     // draw points from the currently bound VAO with current in-use shader
-    glDrawArrays (GL_POINTS, 0, pointsToDraw.size());
-	//glDisableVertexAttribArray(0);
-
-	glutSwapBuffers();
-}
-
-void update()
-{
-	for(int i = 0; i < 3; ++i)
-	{
-		simulation->advance();
-	}
-	glutPostRedisplay();
+    glDrawArrays (GL_POINTS, 0, points.size());
 }
