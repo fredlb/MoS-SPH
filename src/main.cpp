@@ -535,8 +535,10 @@ void calulateForces()
 				{
 					const particle* ppj = neighbours[i].particles[j];
 					float mass = ppj->m_mass;
-
+					dx = pi.m_x - ppj->m_x;
+					dy = pi.m_y - ppj->m_y;
 					distance2 = neighbours[i].r2[j];
+					
 					if(distance2 < IR2)
 					{
 						mdj = ppj->m_massDensity;
@@ -549,8 +551,6 @@ void calulateForces()
 						if( distance2 != 0)
 						{
 							float distance = sqrt(distance2);
-							dx = pi.m_x - ppj->m_x;
-							dy = pi.m_y - ppj->m_y;
 							// uj - ui
 							float velocityDiffu = ppj->m_u - pi.m_u;
 							float velocityDiffv = ppj->m_v - pi.m_v;
