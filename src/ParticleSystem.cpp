@@ -13,15 +13,15 @@
 #define MAX_PARTICLES 4096
 #define averageParticles 20
 
-#define BORDER_LEFT -0.2
-#define BORDER_RIGHT 0.2
+#define BORDER_LEFT -0.4
+#define BORDER_RIGHT 0.4
 #define BORDER_TOP 0.2
-#define BORDER_BOTTOM -0.2
-#define SIM_WIDTH 0.4
-#define SIM_HEIGHT 0.4
+#define BORDER_BOTTOM -0.4
+#define SIM_WIDTH 1.0
+#define SIM_HEIGHT 1.0
 
 #define SIM_SCALE (SIM_WIDTH/2)
-#define TIME_STEP 0.001 //s
+#define TIME_STEP 0.0005 //s
 #define INTERACTION_RADIUS 0.005 //m
 
 #define INTERACTION_RADIUS2 (INTERACTION_RADIUS*INTERACTION_RADIUS)

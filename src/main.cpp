@@ -11,8 +11,8 @@
 #include "ParticleSystem.h"
 #include "vec2.h"
 
-#define kWindowWidth 640
-#define kWindowHeight 480
+#define kWindowWidth 800
+#define kWindowHeight 600
 
 void drawPoints(vector<vec2> points, float r, float g, float b, float a, float size);
 void render();
@@ -80,7 +80,7 @@ void render()
 	glClear (GL_COLOR_BUFFER_BIT);
 	//draw points here
 	pointsToDraw = simulation->getParticleCoordinates();
-	drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 5.0);
+	drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 2.0);
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_UNDER,150.0), 1.0, 0.0, 0.0, 0.5, 5.0);
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_OVER,150.0), 0.0, 1.0, 0.0, 0.5, 5.0);
 	//stop drawing here
@@ -89,7 +89,7 @@ void render()
 
 void update()
 {
-	for(int i = 0; i < 3; ++i)
+	for(int i = 0; i < 7; ++i)
 	{
 		simulation->advance();
 	}
@@ -112,7 +112,7 @@ void drawPoints(vector<vec2> points, float r, float g, float b, float a, float s
  
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, 640, 0, 480, 0, 1);
+    glOrtho(0, kWindowWidth, 0, kWindowHeight, 0, 1);
  
 	//Draw points as smooth balls (with AA)
     glEnable(GL_POINT_SMOOTH);
