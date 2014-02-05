@@ -21,6 +21,15 @@
     <None Include="src\flat.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="src\postprocess.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\metaballs.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\gradientball.frag">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -32,6 +41,9 @@
     <ClCompile Include="src\ParticleSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Postprocess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\shader.h">
@@ -41,6 +53,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vec2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Postprocess.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

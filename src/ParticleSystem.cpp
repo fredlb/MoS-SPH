@@ -10,19 +10,19 @@
 
 #define PI 3.1415926535f
 
-#define MAX_PARTICLES 4096
+#define MAX_PARTICLES 2048
 #define averageParticles 20
 
-#define BORDER_LEFT -0.2
-#define BORDER_RIGHT 0.2
-#define BORDER_TOP 0.2
-#define BORDER_BOTTOM -0.2
-#define SIM_WIDTH 0.4
-#define SIM_HEIGHT 0.4
+#define BORDER_LEFT -0.15
+#define BORDER_RIGHT 0.15
+#define BORDER_TOP 0.15
+#define BORDER_BOTTOM -0.15
+#define SIM_WIDTH 0.3
+#define SIM_HEIGHT 0.3
 
 #define SIM_SCALE (SIM_WIDTH/2)
 #define TIME_STEP 0.001 //s
-#define INTERACTION_RADIUS 0.005 //m
+#define INTERACTION_RADIUS 0.01 //m
 
 #define INTERACTION_RADIUS2 (INTERACTION_RADIUS*INTERACTION_RADIUS)
 

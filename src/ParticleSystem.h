@@ -2,8 +2,6 @@
 #include <vector>
 #include "vec2.h"
 
-using namespace std;
-
 class ParticleSystem
 {
 public:
@@ -47,9 +45,9 @@ private:
 		//is moving particle
 		bool is_static;
 	};
-	vector<particle> particles;
-	vector<particle> border_particles;
-	vector<particle*> grid;
+	std::vector<particle> particles;
+	std::vector<particle> border_particles;
+	std::vector<particle*> grid;
 
 	void createParticleField();
 	void updateGrid();

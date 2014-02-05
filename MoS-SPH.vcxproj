@@ -90,14 +90,19 @@ xcopy /y "$(ProjectDir)src\*.frag" "$(OutDir)"</Command>
   <ItemGroup>
     <None Include="src\default.vert" />
     <None Include="src\flat.frag" />
+    <None Include="src\gradientball.frag" />
+    <None Include="src\postprocess.vert" />
+    <None Include="src\metaballs.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ParticleSystem.cpp" />
+    <ClCompile Include="src\Postprocess.cpp" />
     <ClCompile Include="src\shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ParticleSystem.h" />
+    <ClInclude Include="src\Postprocess.h" />
     <ClInclude Include="src\vec2.h" />
     <ClInclude Include="src\shader.h" />
   </ItemGroup>
