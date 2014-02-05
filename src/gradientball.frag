@@ -7,6 +7,6 @@ void main ()
 	float r2 = dot(diff,diff)*2.0;
 	r2 = clamp(r2,0.0,0.5);
 	float grad = r2*r2 - r2 + 0.25;
-	//float grad = 1/r2;
-	frag_colour = vec4(1.0, 0.0, 0.0, grad);
+	//float grad = 0.001/r2;
+	frag_colour = vec4(grad, 0.0, 0.0, 0.0);
 }

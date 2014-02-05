@@ -143,8 +143,15 @@ void drawMetaballs(std::vector<vec2> points)
 	//draw to texture
 	metaballprocess->drawTo();
 	glClearColor(0.0, 0.0, 0.0, 1.0);
-	// :(
+	
+	glEnable(GL_POINT_SPRITE);
 	glUseProgram (gradientProgramID);
+
+	/*
+	glUseProgram (programID);
+	GLint loc = glGetUniformLocation(programID, "uColor");
+    glUniform4f(loc, 0.5, 0.5, 1.0, 1.0);
+	*/
 
 	glBindBuffer (GL_ARRAY_BUFFER, vbo);
 	glBufferData (GL_ARRAY_BUFFER, (points.size()) * sizeof(vec2), &points[0], GL_STATIC_DRAW);
@@ -158,19 +165,19 @@ void drawMetaballs(std::vector<vec2> points)
     glLoadIdentity();
     glOrtho(0, 640, 0, 480, 0, 1);
  
-	glEnable(GL_POINT_SPRITE);
+	
 	//Draw points as smooth balls (with AA)
 	glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE, GL_ONE);
 
-    glPointSize(20.0);
+    glPointSize(35.0);
 
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     // draw points from the currently bound VAO with current in-use shader
     glDrawArrays (GL_POINTS, 0, points.size());
-
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//draw to screen
 	metaballprocess->renderFrom();
 }

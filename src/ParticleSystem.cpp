@@ -10,7 +10,7 @@
 
 #define PI 3.1415926535f
 
-#define MAX_PARTICLES 2048
+#define MAX_PARTICLES 1024
 #define averageParticles 20
 
 #define BORDER_LEFT -0.15
@@ -38,7 +38,7 @@
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
-#define REST_DENSITY 600.0 //kg / m^3
+#define REST_DENSITY 1000.0 //kg / m^3
 #define VEL_LIMIT 200.0 //velocity limit (m/s)
 #define PARTICLE_RADIUS 0.004 // m
 #define EXT_DAMP 64.0
