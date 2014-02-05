@@ -13,12 +13,12 @@
 #define MAX_PARTICLES 4096
 #define averageParticles 20
 
-#define BORDER_LEFT -0.4
-#define BORDER_RIGHT 0.4
+#define BORDER_LEFT -0.2
+#define BORDER_RIGHT 0.2
 #define BORDER_TOP 0.2
-#define BORDER_BOTTOM -0.4
-#define SIM_WIDTH 1.0
-#define SIM_HEIGHT 1.0
+#define BORDER_BOTTOM -0.2
+#define SIM_WIDTH 0.4
+#define SIM_HEIGHT 0.4
 
 #define SIM_SCALE (SIM_WIDTH/2)
 #define TIME_STEP 0.0005 //s
@@ -34,14 +34,14 @@
 
 
 #define STIFFNESS 2.0 //
-#define VISCOSITY 0.2 // pascal-seconds
+#define VISCOSITY 0.1 // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
 #define REST_DENSITY 600.0 //kg / m^3
 #define VEL_LIMIT 200.0 //velocity limit (m/s)
 #define PARTICLE_RADIUS 0.004 // m
-#define EXT_DAMP 64.0
+#define EXT_DAMP 128.0
 
 float PARTICLE_MASS =  0.0f;
 
@@ -159,6 +159,8 @@ void ParticleSystem::updateNeighbours()
 		{
 			for (int nj=gj-GRID_WIDTH; nj<=gj+GRID_WIDTH; nj+=GRID_WIDTH)
 			{
+				
+
 				//loop over neighbours
 				for(particle* ppj=grid[ni+nj]; ppj != 0; ppj=ppj->next)
 				{
@@ -224,6 +226,7 @@ void ParticleSystem::calculatePressure()
 	for(particle& pi : particles)
 	{
 		float sum = 0.0;
+
 		for(int i=0; i < pi.neighbour_count; i++)
 		{
 			particle& pj = *(pi.neighbours[i]);
@@ -248,7 +251,7 @@ void ParticleSystem::calculateSPHForce()
 		if(pi.is_static) continue;
 		vec2 force;
 
-		//#pragma omp parallel for schedule(static)
+		
 		for(int i=0; i<pi.neighbour_count; i++)
 		{
 			particle& pj = *(pi.neighbours[i]);
