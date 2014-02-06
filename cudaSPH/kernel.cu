@@ -469,7 +469,7 @@ __global__ void calclateForceDevice(){
 	viscosityForcey = 3.5 * viscosityForcey;
 
 	float accX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-	float accY = ((pressureForcey + viscosityForcey + surfaceTensionForcey)/mdi)+g;
+	float accY = ((pressureForcey + viscosityForcey + surfaceTensionForcey)/mdi);
 	
 
 	if(d_firstIteration){
