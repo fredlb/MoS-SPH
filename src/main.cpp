@@ -118,12 +118,13 @@ void update()
 
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size)
 {
+
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glUseProgram (programID);
 	GLint loc = glGetUniformLocation(programID, "uColor");
     glUniform4f(loc, r, g, b, a);
-
+	glDisable(GL_POINT_SPRITE);
 	glBindBuffer (GL_ARRAY_BUFFER, vbo);
 	glBufferData (GL_ARRAY_BUFFER, (points.size()) * sizeof(vec2), &points[0], GL_STATIC_DRAW);
 	glBindVertexArray (vao);
