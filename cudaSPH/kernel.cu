@@ -67,13 +67,14 @@ unsigned int vao;
 unsigned int vbo;
 unsigned int shader_programme;
 
+const float kViewScale =  2.0f;
 //const float interactionRadius =  0.05f;
 //const float cellSize = 2*interactionRadius;
 
 
 
 #define kDt  0.0005f;
-
+const int kCellCount = 100;
 const float restDensity = 988.0f;
 const int kstiffnes = 20;
 const float surfaceTension = 0.0728f;
@@ -198,6 +199,8 @@ __global__ void updatNeighboursDevice()
 
         particle& pi = d_particles[i];
 
+        int x = (1 + pi.m_x)/cellSize;
+        int y = (1 + pi.m_y)/cellSize;
 
         size_t gi = d_gridCoords[i*2];
         size_t gj = d_gridCoords[i*2+1]*d_kGridWidth;
@@ -208,6 +211,7 @@ __global__ void updatNeighboursDevice()
         for(size_t j = 0; j < kBorderParticlesCount; j++)
         {
             particle bp = d_borderParticles[j];
+            float pm = bp.m_mass;
 
             float dx = pi.m_x - bp.m_x;
             float dy = pi.m_y - bp.m_y;
@@ -261,19 +265,17 @@ __global__ void calculatePressureDevice()
     int i = blockIdx.x * blockDim.x + threadIdx.x;
         particle& pi = d_particles[i];
 
-        float massDensity = 0.0f;
+        float massDensity = 1000.0f;
         //loop over neighbours 
-        for(int j=0; j < kParticlesCount; ++j)
+        for(int j=0; j < d_neighbours[i].count; ++j)
         {
-			const particle& ppj = d_particles[j]; 
-            float mass = ppj.m_mass;
-			float dx = pi.m_x - ppj.m_x;
-			float dy = pi.m_y - ppj.m_y;
-            float distance2 = dx*dx+dy*dy;
+			const particle* ppj = d_neighbours[i].particles[j];
+            float mass = ppj->m_mass;
+            float distance2 = d_neighbours[i].r2[j];
 
             if(distance2 < IR2)
             {
-                massDensity = massDensity + mass*d_kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
+                massDensity += mass*d_kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
             }
         }
         pi.m_massDensity = massDensity;
@@ -305,27 +307,27 @@ __global__ void calclateForceDevice()
 
         float mdi = pi.m_massDensity;
         float mdj = 0.0f;
-        float gravity = 0.0f; //g*mdi;
+        float gravity = g*mdi;
 
 		
 		
 		//bool d_firstIteration = false;
 
         //loop over neighbours 
-                for(int j=0; j < kParticlesCount; ++j)
+                for(int j=0; j < d_neighbours[i].count; ++j)
                 {
 					
-                    const particle& ppj = d_particles[j];
-                    float mass = ppj.m_mass;
+                    const particle* ppj = d_neighbours[i].particles[j];
+                    float mass = ppj->m_mass;
 					
-					float dx = pi.m_x - ppj.m_x;
-                    float dy = pi.m_y - ppj.m_y;
-					float distance2 = dx*dx+dy*dy;
+                    float distance2 = d_neighbours[i].r2[j];
+					float dx = pi.m_x - ppj->m_x;
+                    float dy = pi.m_y - ppj->m_y;
                     if(distance2 < IR2)
                     {
-                        mdj = ppj.m_massDensity;
+                        mdj = ppj->m_massDensity;
 
-                        normalx += 1.0f; //(mass/mdj)*(IR2-distance2)*(IR2-distance2)*dx*kWgradDefult;
+                        normalx += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dx*kWgradDefult;
                         normaly += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dy*kWgradDefult;
 
                         gradNormal += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2)*kWlaplacianDefult;
@@ -334,13 +336,13 @@ __global__ void calclateForceDevice()
                         {
                             float distance = sqrt(distance2);
                             // uj - ui
-                            float velocityDiffu = ppj.m_u - pi.m_u;
-                            float velocityDiffv = ppj.m_v - pi.m_v;
+                            float velocityDiffu = ppj->m_u - pi.m_u;
+                            float velocityDiffv = ppj->m_v - pi.m_v;
 
                             float pressi = pi.m_pressure;
-                            float pressj = ppj.m_pressure;
+                            float pressj = ppj->m_pressure;
 
-                            pressureForcex += 1.0f;//((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*d_particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
+                            pressureForcex += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*d_particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
                             pressureForcey += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*d_particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
 
                             viscosityForcex += velocityDiffu * (mass/mdj) * (interactionRadius-distance)*kWlaplacianViscosity;
@@ -355,20 +357,20 @@ __global__ void calclateForceDevice()
 		
 		float normalLenght = 1/sqrt(normalx*normalx + normaly*normaly);
         if(normalLenght > d_surfaceLimit){
-            //surfaceTensionForcex = - 0.0728f  * gradNormal * normalx;
-            //surfaceTensionForcey = - d_surfaceTension  * gradNormal * normaly ;
+            //surfaceTensionForcex = - 0.0728f  * gradNormal * normalx * normalLenght;
+            //surfaceTensionForcey = - d_surfaceTension  * gradNormal * normaly *normalLenght ;
         }
-        //pressureForcex = -mdi * pressureForcex;
-        //pressureForcey = -mdi * pressureForcey;
+        pressureForcex = -mdi * pressureForcex;
+        pressureForcey = -mdi * pressureForcey;
 
         //viscosityForcex = d_viscosityConstant*viscosityForcex;
         //viscosityForcey = d_viscosityConstant*viscosityForcey;
 
-        float accelerationX = (pressureForcex + viscosityForcex);
-        float accelerationY = (pressureForcey + viscosityForcey);
+        //float accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
+        //float accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
 		
-		//float accelerationX = (pressureForcex)/mdi;
-        //float accelerationY = (pressureForcey)/mdi;		
+		float accelerationX = (pressureForcex)/mdi;
+        float accelerationY = (pressureForcey)/mdi;		
 
         //True leap-frog
 		/*
@@ -393,11 +395,107 @@ __global__ void calclateForceDevice()
                         pi.m_x += d_vhx[i]*kDt;
                         pi.m_y += d_vhy[i]*kDt;
                 }   */
-				pi.m_u = accelerationX*kDt;
-				pi.m_v = accelerationY*kDt;
-				pi.m_x = normalx;
-				pi.m_y = pressureForcex;
+				pi.m_x = 0.0f;
 }
+
+
+__global__ void countIt(){
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	particle& pi = d_particles[i];
+	int count1 = 0;
+	float massDensity = 0.0f;
+	int count2 = 0;
+	for(int j=0; j< kParticlesCount; j++){
+		
+		particle& pj = d_particles[j];
+		float dx = pi.m_x - pj.m_x;
+		float dy = pi.m_y - pj.m_y;
+		float distance2 = dx*dx + dy*dy;
+		float mass = pj.m_mass;
+		
+		if(distance2 < IR2){
+			count1++;
+			massDensity += mass*(IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2)*kWdeafult;
+			if(distance2 != 0){
+				count2++;		
+			}
+		}
+	}
+	
+	pi.m_massDensity = massDensity;
+	pi.m_pressure = kstiffnes*(massDensity - 988);
+	//pi.m_u = count1;
+	//pi.m_v = count2;
+}
+
+__global__ void countIt2(){
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
+	particle& pi = d_particles[i];
+	
+	float pressureForcex = 0.0f; 
+    float pressureForcey = 0.0f;
+    float viscosityForcex = 0.0f;
+    float viscosityForcey = 0.0f;
+    float normalx = 0.0f;
+    float normaly = 0.0f;
+    float gradNormal = 0.0f;
+    float surfaceTensionForcex = 0.0f;
+    float surfaceTensionForcey = 0.0f;
+
+	float mdi = pi.m_massDensity;
+
+	int count1 = 0;
+	int count2 = 0;
+	for(int j=0; j< kParticlesCount; j++){
+		
+		particle& pj = d_particles[j];
+		float dx = pi.m_x - pj.m_x;
+		float dy = pi.m_y - pj.m_y;
+		float distance2 = dx*dx + dy*dy;
+		float mass = pj.m_mass;
+		
+		if(distance2 < IR2){
+			float mdj = pj.m_massDensity;
+
+			normalx += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dx*kWgradDefult;
+            normaly += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dy*kWgradDefult;
+			gradNormal += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2)*kWlaplacianDefult;
+			
+			count1++;
+			//massDensity += mass*(IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2)*kWdeafult;
+			if(distance2 != 0){
+				float distance = sqrt(distance2);
+				float velocityDiffu = pj.m_u - pi.m_u;
+                float velocityDiffv = pj.m_v - pi.m_v;
+
+				float pressi = pi.m_pressure;
+				float pressj = pj.m_pressure;
+
+				pressureForcex += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*mass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
+                pressureForcey += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*mass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
+
+				viscosityForcex += velocityDiffu * (mass/mdj) * (interactionRadius-distance)*kWlaplacianViscosity;
+                viscosityForcey += velocityDiffv * (mass/mdj) * (interactionRadius-distance)*kWlaplacianViscosity;
+				count2++;
+			}
+		}
+	}
+	pressureForcex = -mdi*pressureForcex;
+	pressureForcey = -mdi*pressureForcey;
+
+	viscosityForcex = 3.5f * viscosityForcex;
+	viscosityForcey = 3.5 * viscosityForcey;
+
+	float accX = (pressureForcex + viscosityForcex)/mdi;
+	float accY = (pressureForcey + viscosityForcey)/mdi;
+	
+	pi.m_u += accX*kDt;
+	pi.m_v += accY*kDt;
+
+	pi.m_x += pi.m_u * kDt;
+	pi.m_y += pi.m_v * kDt;
+}
+
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -433,23 +531,14 @@ int main () {
   updateGrid();
   drawablePoints.resize(kParticlesCount + kBorderParticlesCount);
 
-  std::cout << "Before: " << std::endl;
-  for(int i=0; i<kParticlesCount; i++)
-  {
-	  std::cout << "x = " << particles[i].m_x << std::endl;
-	  std::cout << "y = " << particles[i].m_y << std::endl;
-  }
-  std::cout << std::endl;
 
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
   
-    //----------------CUDA------------------------------------------------------------------
-  //----------------------------------------------------------------------------------------
-
   cudaMemcpyToSymbol(d_particles, particles, kParticlesCount*sizeof(particle));
   cudaMemcpyToSymbol(borderParticles, borderParticles, kBorderParticlesCount*sizeof(particle));
-  
+  //updateGridDevice<<< 1,kParticlesCount >>>();
+
   glInit();
 
   std::cout << "interaction radius: " << interactionRadius << std::endl;
@@ -459,26 +548,30 @@ int main () {
   //std::cout << "kDt: " << kDt << std::endl;
 
 
+  double t = 0.0;
   double currentTime = glfwGetTime();
-
+  double accumulator = 0.0;
 
   while (!glfwWindowShouldClose (window)) 
   {
       for(int i = 0; i < kSubSteps; ++i)
       {
-		calculatePressureDevice <<< 1, kParticlesCount >>>();
-		calclateForceDevice <<< 1,kParticlesCount >>>();
+		//updateGridDevice <<< 1, kParticlesCount >>>();
+		//updatNeighboursDevice <<< 1,kBorderParticlesCount >>> ();
+		//calculatePressureDevice <<< 1, kParticlesCount >>>();
+		//calclateForceDevice <<< 1,kParticlesCount >>>();
+		countIt<<< 8,128 >>>();
+		countIt2<<<8, 128 >>>();
       }
 
 	  cudaMemcpyFromSymbol(particles, d_particles, kParticlesCount*sizeof(particle));
 
-	    std::cout << "After: " << std::endl;
-		for(int i=0; i<kParticlesCount; i++)
+		/*for(int i=0; i<kParticlesCount; i++)
 		{
-			std::cout << "x = " << particles[i].m_x << std::endl;
-			std::cout << "y = " << particles[i].m_y << std::endl;
+			std::cout << "count1 = " << particles[i].m_u << std::endl;
+			std::cout << "count2 = " << particles[i].m_v << std::endl;
 		}
-		std::cout << std::endl;
+		*/
 		
       createDrawablePoints();
       render();
@@ -688,6 +781,8 @@ void updatNeighbours()
 	{
 		particle& pi = particles[i];
 
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
@@ -698,6 +793,7 @@ void updatNeighbours()
 		for(size_t j = 0; j < kBorderParticlesCount; j++)
 		{
 			particle& bp = borderParticles[j];
+			float pm = bp.m_mass;
 
 			float dx = pi.m_x - bp.m_x;
 			float dy = pi.m_y - bp.m_y;
@@ -788,6 +884,8 @@ void calulateForces()
 		surfaceTensionForcex = 0.0f;
 		surfaceTensionForcey = 0.0f;
 
+		size_t gi = gridCoords[i*2];
+		size_t gj = gridCoords[i*2+1]*kGridWidth;
 
 		float mdi = pi.m_massDensity;
 		float mdj = 0.0f;
@@ -881,7 +979,8 @@ float calculateMass()
 	{
 		particle& pi = particles[i];
 
-
+		int x = (1 + pi.m_x)/cellSize;
+		int y = (1 + pi.m_y)/cellSize;
 
 		size_t gi = gridCoords[i*2];
 		size_t gj = gridCoords[i*2+1]*kGridWidth;
