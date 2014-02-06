@@ -20,6 +20,7 @@ void drawMetaballs(std::vector<vec2> points);
 void render();
 void update();
 void glInit();
+void keyPressed(unsigned char c, int x, int y);
 
 unsigned int vao;
 unsigned int vbo;
@@ -34,6 +35,8 @@ GLuint programID = 0;
 GLuint gradientProgramID = 0;
 std::vector<vec2> pointsToDraw;
 int current_time;
+bool POINTS_MODE = true;
+
 
 int main (int argc, char** argv) {
 	current_time = glutGet(GLUT_ELAPSED_TIME);
@@ -45,7 +48,7 @@ int main (int argc, char** argv) {
 	glutCreateWindow("SPH");
 	glutDisplayFunc(render);
 	glutIdleFunc(update);
-               
+    glutKeyboardFunc(keyPressed);
 	// start GLEW extension handler
 	glewExperimental = GL_TRUE;
 	glewInit ();
@@ -89,8 +92,14 @@ void render()
 
 
 	pointsToDraw = simulation->getParticleCoordinates();
-	drawMetaballs(pointsToDraw);
-	//drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 5.0);
+	if(POINTS_MODE)
+	{
+		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 5.0);
+	}
+	else
+	{
+		drawMetaballs(pointsToDraw);
+	}
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_UNDER,150.0), 1.0, 0.0, 0.0, 0.5, 5.0);
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_OVER,150.0), 0.0, 1.0, 0.0, 0.5, 5.0);
 
@@ -180,4 +189,20 @@ void drawMetaballs(std::vector<vec2> points)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//draw to screen
 	metaballprocess->renderFrom();
+}
+
+void keyPressed(unsigned char c, int x, int y)
+{
+	if(c == 'p')
+	{
+		if(POINTS_MODE)
+		{
+			POINTS_MODE = false;
+		}
+		else
+		{
+			POINTS_MODE = true;
+		}
+	}
+	
 }
