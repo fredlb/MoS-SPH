@@ -1,14 +1,14 @@
-﻿Build started 2014-02-06 16:05:48.
+﻿Build started 2014-02-06 16:24:58.
      1>Project "C:\Users\Sebastian\Skollan\TNM085\MoS-SPH\cudaSPH\cudaSPH.vcxproj" on node 2 (Build target(s)).
      1>InitializeBuildStatus:
-         Creating "Debug\cudaSPH.unsuccessfulbuild" because "AlwaysCreate" was specified.
+         Touching "Debug\cudaSPH.unsuccessfulbuild".
        AddCudaCompileDeps:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\cl.exe /E /nologo /showIncludes /TP /D__CUDACC__ /DWIN32 /D_DEBUG /D_CONSOLE /D_MBCS /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\bin" /I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include" /I. /FIcuda_runtime.h /c C:\Users\Sebastian\Skollan\TNM085\MoS-SPH\cudaSPH\kernel.cu 
        AddCudaCompilePropsDeps:
        Skipping target "AddCudaCompilePropsDeps" because all output files are up-to-date with respect to the input files.
        CudaBuild:
          Compiling CUDA source file kernel.cu...
-         cmd.exe /C "C:\Users\Sebastian\AppData\Local\Temp\tmpe69cf5a883ad4f0fb84ac6b7b27c87cb.cmd"
+         cmd.exe /C "C:\Users\Sebastian\AppData\Local\Temp\tmpa737237eae094aa098fc432f276b8491.cmd"
          "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\bin\nvcc.exe" -gencode=arch=compute_10,code=\"sm_10,compute_10\" --use-local-env --cl-version 2012 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o Debug\kernel.cu.obj "C:\Users\Sebastian\Skollan\TNM085\MoS-SPH\cudaSPH\kernel.cu"
          
          C:\Users\Sebastian\Skollan\TNM085\MoS-SPH\cudaSPH>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\bin\nvcc.exe" -gencode=arch=compute_10,code=\"sm_10,compute_10\" --use-local-env --cl-version 2012 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin"  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v5.5\include"  -G   --keep-dir Debug -maxrregcount=0  --machine 32 --compile -cudart static  -g   -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Zi /RTC1 /MDd  " -o Debug\kernel.cu.obj "C:\Users\Sebastian\Skollan\TNM085\MoS-SPH\cudaSPH\kernel.cu" 
@@ -20,45 +20,41 @@
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(203): warning : variable "y" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(302): warning : variable "surfaceTensionForcex" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(278): warning : variable "surfaceTensionForcex" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(303): warning : variable "surfaceTensionForcey" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(279): warning : variable "surfaceTensionForcey" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(310): warning : variable "gravity" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(286): warning : variable "gravity" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(355): warning : variable "d_surfaceTension" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(331): warning : variable "d_surfaceTension" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(356): warning : variable "d_viscosityConstant" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(332): warning : variable "d_viscosityConstant" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(372): warning : variable "accelerationX" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(348): warning : variable "accelerationX" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(373): warning : variable "accelerationY" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(349): warning : variable "accelerationY" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(442): warning : variable "surfaceTensionForcex" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(552): warning : variable "t" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(443): warning : variable "surfaceTensionForcey" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(554): warning : variable "accumulator" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(551): warning : variable "t" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(798): warning : variable "pm" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(553): warning : variable "accumulator" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(786): warning : variable "x" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(796): warning : variable "pm" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(787): warning : variable "y" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(784): warning : variable "x" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(857): warning : variable "x" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(785): warning : variable "y" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(887): warning : variable "gi" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(888): warning : variable "gj" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(982): warning : variable "x" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(983): warning : variable "y" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(858): warning : variable "y" was declared but never referenced
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(70): warning : variable "kViewScale" was declared but never referenced
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(77): warning : variable "kCellCount" was declared but never referenced
+         
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(80): warning : variable "surfaceTension" was declared but never referenced
+         
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(81): warning : variable "viscosityConstant" was declared but never referenced
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(168): warning : variable "d_kGridCellCount" was declared but never referenced
          
@@ -68,83 +64,63 @@
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(203): warning : variable "y" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(302): warning : variable "surfaceTensionForcex" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(278): warning : variable "surfaceTensionForcex" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(303): warning : variable "surfaceTensionForcey" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(279): warning : variable "surfaceTensionForcey" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(310): warning : variable "gravity" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(286): warning : variable "gravity" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(355): warning : variable "d_surfaceTension" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(331): warning : variable "d_surfaceTension" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(356): warning : variable "d_viscosityConstant" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(332): warning : variable "d_viscosityConstant" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(372): warning : variable "accelerationX" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(348): warning : variable "accelerationX" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(373): warning : variable "accelerationY" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(349): warning : variable "accelerationY" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(442): warning : variable "surfaceTensionForcex" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(552): warning : variable "t" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(443): warning : variable "surfaceTensionForcey" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(554): warning : variable "accumulator" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(551): warning : variable "t" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(798): warning : variable "pm" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(553): warning : variable "accumulator" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(786): warning : variable "x" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(796): warning : variable "pm" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(787): warning : variable "y" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(784): warning : variable "x" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(857): warning : variable "x" was declared but never referenced
          
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(785): warning : variable "y" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(887): warning : variable "gi" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(888): warning : variable "gj" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(982): warning : variable "x" was declared but never referenced
-         
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(983): warning : variable "y" was declared but never referenced
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(858): warning : variable "y" was declared but never referenced
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(70): warning : variable "kViewScale" was declared but never referenced
          
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(77): warning : variable "kCellCount" was declared but never referenced
          
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(80): warning : variable "surfaceTension" was declared but never referenced
+         
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(81): warning : variable "viscosityConstant" was declared but never referenced
+         
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(241): warning : Cannot tell what pointer points to, assuming global memory space
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(242): warning : Cannot tell what pointer points to, assuming global memory space
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(237): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(273): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(321): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(324): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(325): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(328): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(339): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(340): warning : Cannot tell what pointer points to, assuming global memory space
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(343): warning : Cannot tell what pointer points to, assuming global memory space
-         ptxas C:/Users/SEBAST~1/AppData/Local/Temp/tmpxft_00002ad8_00000000-4_kernel.ptx, line 624; : warning : Double is not supported. Demoting to float
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(688): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(756): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(757): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(784): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(785): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(814): warning C4018: '<=' : signed/unsigned mismatch
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(297): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(300): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(301): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(304): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(315): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(316): warning : Cannot tell what pointer points to, assuming global memory space
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(319): warning : Cannot tell what pointer points to, assuming global memory space
+         ptxas C:/Users/SEBAST~1/AppData/Local/Temp/tmpxft_000028c8_00000000-4_kernel.ptx, line 678; : warning : Double is not supported. Demoting to float
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(690): warning C4244: 'initializing' : conversion from 'double' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(758): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(759): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(786): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(787): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
      1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(816): warning C4018: '<=' : signed/unsigned mismatch
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(853): warning C4018: '<' : signed/unsigned mismatch
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(861): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(892): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(895): warning C4018: '<' : signed/unsigned mismatch
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(907): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(908): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(910): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(922): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(923): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(925): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(926): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(947): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(948): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(961): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(962): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(982): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(983): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
-     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(1002): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(818): warning C4018: '<=' : signed/unsigned mismatch
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(857): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(858): warning C4244: 'initializing' : conversion from 'float' to 'int', possible loss of data
+     1>C:/Users/Sebastian/Skollan/TNM085/MoS-SPH/cudaSPH/kernel.cu(877): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
        ClCompile:
          All outputs are up-to-date.
        Link:
@@ -166,4 +142,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:16.22
+Time Elapsed 00:00:19.35

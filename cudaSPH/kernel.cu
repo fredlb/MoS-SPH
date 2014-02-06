@@ -259,31 +259,7 @@ __global__ void updatNeighboursDevice()
         }
 }
 
-__global__ void calculatePressureDevice()
-{
-	const float d_kWdeafult = (315/(64*kPi*pow(interactionRadius,9))); 
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-        particle& pi = d_particles[i];
-
-        float massDensity = 1000.0f;
-        //loop over neighbours 
-        for(int j=0; j < d_neighbours[i].count; ++j)
-        {
-			const particle* ppj = d_neighbours[i].particles[j];
-            float mass = ppj->m_mass;
-            float distance2 = d_neighbours[i].r2[j];
-
-            if(distance2 < IR2)
-            {
-                massDensity += mass*d_kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
-            }
-        }
-        pi.m_massDensity = massDensity;
-        pi.m_pressure = kstiffnes * (massDensity - 988);
-		//pi.m_x += -0.5;
-}
-
-__global__ void calclateForceDevice()
+__global__ void calclateForceDeviceNOT()
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	
@@ -398,8 +374,7 @@ __global__ void calclateForceDevice()
 				pi.m_x = 0.0f;
 }
 
-
-__global__ void countIt(){
+__global__ void calculatePressureDevice(){
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	particle& pi = d_particles[i];
 	int count1 = 0;
@@ -428,7 +403,7 @@ __global__ void countIt(){
 	//pi.m_v = count2;
 }
 
-__global__ void countIt2(){
+__global__ void calclateForceDevice(){
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	particle& pi = d_particles[i];
 	
@@ -480,20 +455,46 @@ __global__ void countIt2(){
 			}
 		}
 	}
+
+	float normalLenght = 1/sqrt(normalx*normalx + normaly*normaly);
+    if(normalLenght > 7){
+		surfaceTensionForcex = - 0.0728f  * gradNormal * normalx * normalLenght;
+        surfaceTensionForcey = - 0.0728f  * gradNormal * normaly *normalLenght ;
+    }
+
 	pressureForcex = -mdi*pressureForcex;
 	pressureForcey = -mdi*pressureForcey;
 
 	viscosityForcex = 3.5f * viscosityForcex;
 	viscosityForcey = 3.5 * viscosityForcey;
 
-	float accX = (pressureForcex + viscosityForcex)/mdi;
-	float accY = (pressureForcey + viscosityForcey)/mdi;
+	float accX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
+	float accY = ((pressureForcey + viscosityForcey + surfaceTensionForcey)/mdi)+g;
 	
-	pi.m_u += accX*kDt;
-	pi.m_v += accY*kDt;
 
-	pi.m_x += pi.m_u * kDt;
-	pi.m_y += pi.m_v * kDt;
+	if(d_firstIteration){
+		d_vhx[i] = pi.m_u + 0.5*accX*kDt;
+        d_vhy[i] = pi.m_v + 0.5*accY*kDt;
+                        
+        pi.m_u += accX*kDt;
+        pi.m_v += accY*kDt;
+		
+		pi.m_x += d_vhx[i]*kDt;
+        pi.m_y += d_vhy[i]*kDt;
+
+        d_firstIteration = false;
+	}else{
+		d_vhx[i] += accX*kDt;
+        d_vhy[i] += accY*kDt;
+		pi.m_u = d_vhx[i] + 0.5*accX*kDt;
+		pi.m_v = d_vhy[i] + 0.5*accY*kDt;
+
+		pi.m_x += d_vhx[i]*kDt;
+		pi.m_y += d_vhy[i]*kDt;
+	}
+
+	//pi.m_x += pi.m_u * kDt;
+	//pi.m_y += pi.m_v * kDt;
 }
 
 
@@ -560,8 +561,8 @@ int main () {
 		//updatNeighboursDevice <<< 1,kBorderParticlesCount >>> ();
 		//calculatePressureDevice <<< 1, kParticlesCount >>>();
 		//calclateForceDevice <<< 1,kParticlesCount >>>();
-		countIt<<< 8,128 >>>();
-		countIt2<<<8, 128 >>>();
+		calculatePressureDevice<<< 16,64 >>>();
+		calclateForceDevice<<<16, 64 >>>();
       }
 
 	  cudaMemcpyFromSymbol(particles, d_particles, kParticlesCount*sizeof(particle));
@@ -575,6 +576,7 @@ int main () {
 		
       createDrawablePoints();
       render();
+	 
 
       glfwPollEvents ();
       // put the stuff we've been drawing onto the display
@@ -842,133 +844,6 @@ void updatNeighbours()
 	}
 }
 
-void calculatePressure()
-{
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		float massDensity = 0.0f;
-		//loop over neighbours 
-		for(int j=0; j < neighbours[i].count; ++j)
-		{
-			const particle* ppj = neighbours[i].particles[j];
-			float mass = ppj->m_mass;
-			distance2 = neighbours[i].r2[j];
-
-			if(distance2 < IR2)
-			{
-				massDensity += mass* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2)*kWdeafult;
-			}
-		}
-		pi.m_massDensity = massDensity;
-		pi.m_pressure = kstiffnes * (massDensity - restDensity);
-	}
-}
-
-void calulateForces()
-{
-	//Force loop
-	//
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		pressureForcex = 0.0f; 
-		pressureForcey = 0.0f;
-		viscosityForcex = 0.0f;
-		viscosityForcey = 0.0f;
-		normalx = 0.0f;
-		normaly = 0.0f;
-		gradNormal = 0.0f;
-		surfaceTensionForcex = 0.0f;
-		surfaceTensionForcey = 0.0f;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-
-		float mdi = pi.m_massDensity;
-		float mdj = 0.0f;
-		gravity = g*mdi;
-
-		//loop over neighbours 
-				for(int j=0; j < neighbours[i].count; ++j)
-				{
-					const particle* ppj = neighbours[i].particles[j];
-					float mass = ppj->m_mass;
-					dx = pi.m_x - ppj->m_x;
-					dy = pi.m_y - ppj->m_y;
-					distance2 = neighbours[i].r2[j];
-					
-					if(distance2 < IR2)
-					{
-						mdj = ppj->m_massDensity;
-
-						normalx += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dx*kWgradDefult;
-						normaly += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*dy*kWgradDefult;
-
-						gradNormal += (mass/mdj)*(IR2-distance2)*(IR2-distance2)*(3*IR2-7*distance2)*kWlaplacianDefult;
-
-						if( distance2 != 0)
-						{
-							float distance = sqrt(distance2);
-							// uj - ui
-							float velocityDiffu = ppj->m_u - pi.m_u;
-							float velocityDiffv = ppj->m_v - pi.m_v;
-
-							float pressi = pi.m_pressure;
-							float pressj = ppj->m_pressure;
-
-							pressureForcex += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dx/distance)*kWgradPressure;
-							pressureForcey += ((pressi/(mdi*mdi))+(pressj/(mdj*mdj)))*particleMass*(interactionRadius-distance)*(interactionRadius-distance)*(dy/distance)*kWgradPressure;
-
-							viscosityForcex += velocityDiffu * (mass/mdj) *(interactionRadius-distance)*kWlaplacianViscosity;
-							viscosityForcey += velocityDiffv * (mass/mdj) * (interactionRadius-distance)*kWlaplacianViscosity;
-
-						}
-					}
-				}
-		float normalLenght = sqrt(normalx*normalx + normaly*normaly);
-		if(normalLenght > surfaceLimit){
-			surfaceTensionForcex = - surfaceTension  * gradNormal * (normalx/normalLenght);
-			surfaceTensionForcey = - surfaceTension  * gradNormal * (normaly/normalLenght);
-		}
-		pressureForcex = -mdi * pressureForcex;
-		pressureForcey = -mdi * pressureForcey;
-
-		viscosityForcex = viscosityConstant*viscosityForcex;
-		viscosityForcey = viscosityConstant*viscosityForcey;
-
-		accelerationX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
-		accelerationY = (pressureForcey + viscosityForcey + surfaceTensionForcey + gravity)/mdi;
-
-		//True leap-frog
-                if(firstIteration){
-                        vhx[i] = pi.m_u + 0.5*accelerationX*kDt;
-                        vhy[i] = pi.m_v + 0.5*accelerationY*kDt;
-                        
-                        pi.m_u += accelerationX*kDt;
-                        pi.m_v += accelerationY*kDt;
-
-                        pi.m_x += vhx[i]*kDt;
-                        pi.m_y += vhy[i]*kDt;
-
-                        firstIteration = false;
-                }else{
-                        vhx[i] += accelerationX*kDt;
-                        vhy[i] += accelerationY*kDt;
-                        
-                        pi.m_u = vhx[i] + 0.5*accelerationX*kDt;
-                        pi.m_v = vhy[i] + 0.5*accelerationY*kDt;
-
-                        pi.m_x += vhx[i]*kDt;
-                        pi.m_y += vhy[i]*kDt;
-                }
-
-	}
-
-		
-}
 
 float calculateMass()
 {
