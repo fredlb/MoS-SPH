@@ -20,7 +20,6 @@
 #include <vector>
 #include <math.h>
 //#include <vld.h>
-
 #define _CRTDBG_MAP_ALLOC
 
 #define kParticlesCount 1024
@@ -151,7 +150,7 @@ GLuint programID = 0;
 
 //Global CUDA arrays
 __device__ particle  d_particles[kParticlesCount];
-__device__ particle* d_grid[kGridCellCount];
+//__device__ particle* d_grid[kGridCellCount];
 thrust::device_vector<particle*> ddgrid;
  //thrust::device_vector<particle*> d_grid;
 __device__ size_t d_gridCoords[2*kParticlesCount];
@@ -161,109 +160,13 @@ __device__ float d_vhx[kParticlesCount];
 __device__ float d_vhy[kParticlesCount]; 
 __device__ bool d_firstIteration = true;
 
-__global__ void updateGridDevice()
-{
-    const size_t d_kGridWidth = (size_t)(2.0 / cellSize);
-    const size_t d_kGridHeight = (size_t)(2.0 / cellSize);
-    const size_t d_kGridCellCount = d_kGridWidth * d_kGridHeight;
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    
-        particle& pi = d_particles[i];
-
-        int x = (1 + pi.m_x)/cellSize;
-        int y = (1 + pi.m_y)/cellSize;
-
-
-        if (x < 1)
-            x = 1;
-        else if (x > d_kGridWidth-2)
-            x = d_kGridWidth-2;
-
-        if (y < 1)
-            y = 1;
-        else if (y > d_kGridHeight-2)
-            y = d_kGridHeight-2;
-
-        pi.next = d_grid[x+y*d_kGridWidth];
-        d_grid[x+y*d_kGridWidth] = &pi;
-
-        d_gridCoords[i*2] = x;
-        d_gridCoords[i*2+1] = y;
-}
-
-__global__ void updatNeighboursDevice()
-{
-	const size_t d_kGridWidth = (size_t)(2.0 / cellSize);
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-        particle& pi = d_particles[i];
-
-        int x = (1 + pi.m_x)/cellSize;
-        int y = (1 + pi.m_y)/cellSize;
-
-        size_t gi = d_gridCoords[i*2];
-        size_t gj = d_gridCoords[i*2+1]*d_kGridWidth;
-        
-        d_neighbours[i].count = 0;
-        
-        //Loop over border
-        for(size_t j = 0; j < kBorderParticlesCount; j++)
-        {
-            particle bp = d_borderParticles[j];
-            float pm = bp.m_mass;
-
-            float dx = pi.m_x - bp.m_x;
-            float dy = pi.m_y - bp.m_y;
-            float distance2 = dx*dx + dy*dy;
-
-            if(distance2 < IR2)
-            {
-                if(d_neighbours[i].count < kMaxNeighbourCount)
-                {
-                    d_neighbours[i].particles[d_neighbours[i].count] = &bp;
-                    d_neighbours[i].r2[d_neighbours[i].count] = distance2;
-                    ++d_neighbours[i].count;
-                }
-            }
-        }
-        //loop over cells
-        for (int ni=gi-1; ni<=gi+1; ++ni)
-        {
-            for (int nj=gj-d_kGridWidth; nj<=gj+d_kGridWidth; nj+=d_kGridWidth)
-            {
-                //loop over neighbors
-                for (particle* ppj=d_grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-                {
-                    //do fancy math
-                    //std::cout << "ppj x: " << ppj->m_x << std::endl;
-                    float dx = pi.m_x - ppj->m_x;
-                    float dy = pi.m_y - ppj->m_y;
-                    float distance2 = dx*dx + dy*dy;
-
-                    if(distance2 < IR2)
-                    {
-                        //Density
-                        //massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
-
-                        if(d_neighbours[i].count < kMaxNeighbourCount)
-                        {
-                            d_neighbours[i].particles[d_neighbours[i].count] = ppj;
-                            d_neighbours[i].r2[d_neighbours[i].count] =distance2;
-                            ++d_neighbours[i].count;
-                        }
-                    }
-                }
-            }
-        }
-}
-
-__global__ void updateGridDevice2()
+__global__ void updateGridDevice2(particle** dg)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
 	particle& pi = d_particles[i];
-
+	__shared__ particle* s[kGridCellCount];
 	const size_t d_kGridWidth = (size_t)(2.0 / cellSize);
     const size_t d_kGridHeight = (size_t)(2.0 / cellSize);
     const size_t d_kGridCellCount = d_kGridWidth * d_kGridHeight;
@@ -280,21 +183,24 @@ __global__ void updateGridDevice2()
             y = 1;
         else if (y > d_kGridHeight-2)
             y = d_kGridHeight-2;
-
-	pi.next = d_grid[x+y*d_kGridWidth];
-    d_grid[x+y*d_kGridWidth] = &pi;
+	s[x+y*d_kGridWidth] = &pi;
+	__syncthreads();
+	pi.next = dg[x+y*d_kGridWidth];
+    dg[x+y*d_kGridWidth] = s[x+y*d_kGridWidth] ;
+	__syncthreads();
 
     d_gridCoords[i*2] = x;
     d_gridCoords[i*2+1] = y;
 
+
 	//pi.m_u = d_gridCoords[i*2];
 	//pi.m_v = d_gridCoords[i*2+1];
 
-	pi.m_u = d_grid[x+y*d_kGridWidth]->m_mass;
+	//pi.m_u = dg[x+y*d_kGridWidth]->m_mass;
 	//pi.m_v = pi.next->m_mass;
 }
 
-__global__ void updateNeighboursDevice(){
+__global__ void updateNeighboursDevice(particle** dg){
 	const size_t d_kGridWidth = (size_t)(2.0 / cellSize);
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -305,20 +211,22 @@ __global__ void updateNeighboursDevice(){
 
 	size_t gi = d_gridCoords[i*2];
 	size_t gj = d_gridCoords[i*2]*d_kGridWidth;
-	/*
+
+	
 	for(int ni = gi-1; ni<=gi+1; ++ni)
 	{
 		for(int nj = gj-d_kGridWidth; nj<=gj+d_kGridWidth; nj+=d_kGridWidth)
 		{
-			for(particle* ppj=d_grid[ni+nj]; NULL !=ppj; ppj=ppj->next)
+			for(particle* ppj= dg[ni+nj]; NULL !=ppj; ppj=ppj->next)
 			{
+				particle pj = *ppj;
 
 			}
 		}
 	}
-	*/
+	
 	//particle* pj = d_grid[i];  
-	pi.m_u = d_grid[i]->m_mass;
+	//pi.m_u = dg[i].m_mass;
 	//pi.m_v = 0.0f;
 	//pi.m_v = gj;
 }
@@ -420,7 +328,7 @@ __global__ void calclateForceDevice(){
 	float accX = (pressureForcex + viscosityForcex + surfaceTensionForcex)/mdi;
 	float accY = ((pressureForcey + viscosityForcey + surfaceTensionForcey)/mdi);
 	
-	/*
+	
 	if(d_firstIteration){
 		d_vhx[i] = pi.m_u + 0.5*accX*kDt;
         d_vhy[i] = pi.m_v + 0.5*accY*kDt;
@@ -441,9 +349,8 @@ __global__ void calclateForceDevice(){
 		pi.m_x += d_vhx[i]*kDt;
 		pi.m_y += d_vhy[i]*kDt;
 	}
-	*/
+	
 }
-
 
 int main () {
   // start GL context and O/S window using the GLFW helper library
@@ -473,12 +380,25 @@ int main () {
   printf ("OpenGL version supported %s\n", version);
   
 
+  //particle** d_grid;
+  //cudaMalloc(&d_grid, kGridCellCount*sizeof(particle*));
+
+  
   grid.resize(kGridCellCount);
   particlesInit();
   borderParticlesInit();
   updateGrid();
   drawablePoints.resize(kParticlesCount + kBorderParticlesCount);
 
+  particle* d_grid[kGridCellCount];
+  cudaMalloc((particle**) &d_grid, kGridCellCount*sizeof(particle*));
+  particle* gridHost[kGridCellCount];
+  for(int i=0; i < kGridCellCount; i++){
+	  //cudaMalloc(&gridHost[i],i*sizeof(particle*));
+		gridHost[i] = grid[i];
+  }
+
+  cudaMemcpy(d_grid,gridHost,kGridCellCount*sizeof(particle*),cudaMemcpyHostToDevice);
 
   particleMass = calculateMass();
   std::cout << "Mass: "<< particleMass << std::endl;
@@ -502,25 +422,24 @@ int main () {
 
   while (!glfwWindowShouldClose (window)) 
   {
-
-	  /*for(int i = 0; i < kSubSteps; ++i)
+	  
+	  for(int i = 0; i < kSubSteps; ++i)
       {
-		updateGridDevice <<< 1, kParticlesCount >>>();
-		updatNeighboursDevice <<< 1,kBorderParticlesCount >>> ();
-		calculatePressureDevice<<< 16,64 >>>();
-		calclateForceDevice<<<16, 64 >>>();
-      }*/
-
-	 updateGridDevice2<<< 1,kParticlesCount >>>();
-	 //updateNeighboursDevice <<< 1,kParticlesCount>>>();
-
+		//updateGridDevice <<< 1, kParticlesCount >>>();
+		//updatNeighboursDevice <<< 1,kBorderParticlesCount >>> ();
+		//calculatePressureDevice<<< 16,64 >>>();
+		//calclateForceDevice<<<16, 64 >>>();
+      }
+	  	updateGridDevice2<<< 1,kParticlesCount >>>(d_grid);
+		cudaThreadSynchronize();
+		updateNeighboursDevice <<< 1,kParticlesCount>>>(d_grid);
 	  cudaMemcpyFromSymbol(particles, d_particles, kParticlesCount*sizeof(particle));
-
 		for(int i=0; i<kParticlesCount; i++)
 		{
 			std::cout << "count1 = " << particles[i].m_u << std::endl;
-			std::cout << "count2 = " << particles[i].m_v << std::endl;
+			//std::cout << "count2 = " << particles[i].m_v << std::endl;
 		}
+		
 		
 		
       createDrawablePoints();
@@ -725,74 +644,6 @@ void updateGrid()
 		gridCoords[i*2+1] = y;
 	}
 }
-
-void updatNeighbours()
-{
-	for(int i = 0; i < kParticlesCount; ++i)
-	{
-		particle& pi = particles[i];
-
-		int x = (1 + pi.m_x)/cellSize;
-		int y = (1 + pi.m_y)/cellSize;
-
-		size_t gi = gridCoords[i*2];
-		size_t gj = gridCoords[i*2+1]*kGridWidth;
-		
-		neighbours[i].count = 0;
-		
-		//Loop over border
-		for(size_t j = 0; j < kBorderParticlesCount; j++)
-		{
-			particle& bp = borderParticles[j];
-			float pm = bp.m_mass;
-
-			float dx = pi.m_x - bp.m_x;
-			float dy = pi.m_y - bp.m_y;
-			float distance2 = dx*dx + dy*dy;
-
-			if(distance2 < IR2)
-			{
-				if(neighbours[i].count < kMaxNeighbourCount)
-				{
-					neighbours[i].particles[neighbours[i].count] = &bp;
-					neighbours[i].r2[neighbours[i].count] = distance2;
-					++neighbours[i].count;
-					//std::cout << "I'm on the border" << std::endl;
-				}
-			}
-		}
-		//loop over cells
-		for (int ni=gi-1; ni<=gi+1; ++ni)
-		{
-			for (int nj=gj-kGridWidth; nj<=gj+kGridWidth; nj+=kGridWidth)
-			{
-				//loop over neighbors
-				for (particle* ppj=grid[ni+nj]; NULL!=ppj; ppj=ppj->next)
-				{
-					//do fancy math
-					//std::cout << "ppj x: " << ppj->m_x << std::endl;
-					dx = pi.m_x - ppj->m_x;
-					dy = pi.m_y - ppj->m_y;
-					distance2 = dx*dx + dy*dy;
-
-					if(distance2 < IR2)
-					{
-						//Density
-						//massDensity += particleMass*kWdeafult* (IR2 - distance2)*(IR2 - distance2)*(IR2 - distance2);
-
-						if(neighbours[i].count < kMaxNeighbourCount)
-						{
-							neighbours[i].particles[neighbours[i].count] = ppj;
-							neighbours[i].r2[neighbours[i].count] =distance2;
-							++neighbours[i].count;
-						}
-					}
-				}
-			}
-		}
-	}
-}
-
 
 float calculateMass()
 {
