@@ -94,7 +94,7 @@ void render()
 	pointsToDraw = simulation->getParticleCoordinates();
 	if(POINTS_MODE)
 	{
-		drawPoints(pointsToDraw, 0.0, 0.46, 0.75, 1.0, 1.0);
+		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 1.0);
 	}
 	else
 	{
@@ -119,7 +119,7 @@ void update()
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size)
 {
 
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glUseProgram (programID);
 	GLint loc = glGetUniformLocation(programID, "uColor");
