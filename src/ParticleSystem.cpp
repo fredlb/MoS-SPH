@@ -65,6 +65,7 @@ ParticleSystem::ParticleSystem(void)
 
 void ParticleSystem::reloadParticleSystem()
 {
+	memset(&particles[0], 0, particles.size()*sizeof(particles[0]));
 	createParticleField();
 	updateGrid();
 	advance_call = 0;
@@ -195,7 +196,8 @@ void ParticleSystem::updateNeighbours()
 
 		
 		//Loop over border
-		/*for(int j=0; j<MAX_BORDER_PARTICLES; j++)
+		/*
+		for(int j=0; j<MAX_BORDER_PARTICLES; j++)
 		{
 			particle& pj = border_particles[j];
 			vec2 distance_vector = (pi.position - pj.position);
