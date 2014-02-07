@@ -25,7 +25,7 @@ void main(void) {
 	vec3 light = normalize(vec3(-1.0, -1.0, 0.5));
 	
 	// smooth border
-	float alpha = smoothstep(0.0, 0.3, height);
+	float alpha = smoothstep(0.0, 0.3, height)-0.4;
 	
 	// reflected light vector
 	vec3 ref = reflect(normalize(vec3(uv, -1.0)), normal);
@@ -34,8 +34,9 @@ void main(void) {
 	float diff = dot(normal, light) * 0.6 + 0.4;
 	
 	// combine colors
+
 	vec3 col = vec3(0.0, 0.55, 0.75);
-	col = col * diff;
+col = col * diff;
 	
 	//gl_FragColor = vec4(normal,step(0.01, height));
 	gl_FragColor = vec4(col,alpha);
