@@ -10,15 +10,15 @@
 
 #define PI 3.1415926535f
 
-#define MAX_PARTICLES 4096
+#define MAX_PARTICLES 16384
 #define averageParticles 20
 
-#define BORDER_LEFT -0.2
-#define BORDER_RIGHT 0.2
-#define BORDER_TOP 0.2
-#define BORDER_BOTTOM -0.2
-#define SIM_WIDTH 0.4
-#define SIM_HEIGHT 0.4
+#define BORDER_LEFT -0.8
+#define BORDER_RIGHT 0.8
+#define BORDER_TOP 0.8
+#define BORDER_BOTTOM -0.8
+#define SIM_WIDTH 1.6
+#define SIM_HEIGHT 1.6
 
 #define SIM_SCALE (SIM_WIDTH/2)
 #define TIME_STEP 0.001 //s
@@ -41,7 +41,7 @@
 #define REST_DENSITY 600.0 //kg / m^3
 #define VEL_LIMIT 200.0 //velocity limit (m/s)
 #define PARTICLE_RADIUS 0.004 // m
-#define EXT_DAMP 64.0
+#define EXT_DAMP 512.0
 
 float PARTICLE_MASS =  0.0f;
 
@@ -149,8 +149,10 @@ void ParticleSystem::updateGrid()
 
 void ParticleSystem::updateNeighbours()
 {
-	for(particle& pi : particles)
+	#pragma omp parallel for
+	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
+		particle& pi = particles[i];
 		pi.neighbour_count = 0;
 		size_t gi = pi.grid_x;
 		size_t gj = pi.grid_y*GRID_WIDTH;
@@ -221,10 +223,15 @@ void ParticleSystem::calculateMass()
 void ParticleSystem::calculatePressure()
 {
 	//float c;
-	for(particle& pi : particles)
+	#pragma omp parallel for
+	for(int j = 0; j < MAX_PARTICLES; j++)
 	{
+		particle& pi = particles[j];
 		float sum = 0.0;
-		for(int i=0; i < pi.neighbour_count; i++)
+		int i;	
+
+		//#pragma omp parallel for schedule(static)
+		for(i = 0; i < pi.neighbour_count; i++)
 		{
 			particle& pj = *(pi.neighbours[i]);
 			vec2 distance_vector = (pi.position - pj.position);
@@ -232,6 +239,7 @@ void ParticleSystem::calculatePressure()
 			if(distance2 < INTERACTION_RADIUS2)
 			{
 				float c = (INTERACTION_RADIUS2 - distance2);
+				//#pragma omp atomic
 				sum += c*c*c;
 			}
 		}
@@ -243,13 +251,17 @@ void ParticleSystem::calculatePressure()
 
 void ParticleSystem::calculateSPHForce()
 {
-	for(particle& pi : particles)
+	#pragma omp parallel for 
+	for(int j = 0; j < MAX_PARTICLES; j++)
 	{
+		particle& pi = particles[j];
 		if(pi.is_static) continue;
 		vec2 force;
-
-		//#pragma omp parallel for schedule(static)
-		for(int i=0; i<pi.neighbour_count; i++)
+		float forcex = 0;
+		float forcey = 0;
+		int i;
+		//#pragma omp parallel for 
+		for(i=0; i<pi.neighbour_count; i++)
 		{
 			particle& pj = *(pi.neighbours[i]);
 			vec2 distance_vector = (pi.position - pj.position);
@@ -258,9 +270,17 @@ void ParticleSystem::calculateSPHForce()
 			float pressure_term = -0.5f * c * W_GRAD_PRESSURE * (pi.pressure + pj.pressure) / pi.neighbour_distance[i];
 			float density_term = c * pi.density * pj.density;
 			float viscosity_term = W_LAPLACIAN_VISCOSITY * VISCOSITY;
-			force += ( pressure_term * distance_vector + viscosity_term * (pj.velocity_eval - pi.velocity_eval) ) * density_term;
+			//#pragma omp atomic
+			forcex += ( pressure_term * distance_vector.x + viscosity_term * (pj.velocity_eval.x - pi.velocity_eval.x) ) * density_term;
+			//#pragma omp atomic
+			forcey += ( pressure_term * distance_vector.y + viscosity_term * (pj.velocity_eval.y - pi.velocity_eval.y) ) * density_term;
+			
+
+			//force += ( pressure_term * distance_vector + viscosity_term * (pj.velocity_eval - pi.velocity_eval) ) * density_term;
 		}
-		pi.force = force;
+		pi.force.x = forcex;
+		pi.force.y = forcey;
+
 	}
 }
 

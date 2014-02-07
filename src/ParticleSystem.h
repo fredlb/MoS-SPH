@@ -19,7 +19,7 @@ public:
 	void drawParticle(float x, float y, bool is_static);
 
 private:
-	#define MAX_NEIGHBOURS 32
+	#define MAX_NEIGHBOURS 64
 	struct particle
 	{
 		//physical properties

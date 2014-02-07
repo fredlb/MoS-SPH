@@ -1,7 +1,7 @@
 uniform sampler2D fbo_texture;
 varying vec2 f_texcoord;
 
-const vec2 resolution = vec2(640.0, 480.0);
+const vec2 resolution = vec2(800.0, 600.0);
 
 void main(void) {
 	float height = texture2D(fbo_texture, f_texcoord).r; //height at fragment

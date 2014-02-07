@@ -12,8 +12,8 @@
 #include "vec2.h"
 #include "Postprocess.h"
 
-#define kWindowWidth 640
-#define kWindowHeight 480
+#define kWindowWidth 800
+#define kWindowHeight 600
 
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size);
 void drawMetaballs(std::vector<vec2> points);
@@ -94,7 +94,7 @@ void render()
 	pointsToDraw = simulation->getParticleCoordinates();
 	if(POINTS_MODE)
 	{
-		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 5.0);
+		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 1.0);
 	}
 	else
 	{
@@ -109,7 +109,7 @@ void render()
 
 void update()
 {
-	for(int i = 0; i < 3; ++i)
+	for(int i = 0; i < 7; ++i)
 	{
 		simulation->advance();
 	}
@@ -181,7 +181,7 @@ void drawMetaballs(std::vector<vec2> points)
     glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
 
-    glPointSize(50.0);
+    glPointSize(10.0);
 
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
