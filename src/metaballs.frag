@@ -34,7 +34,7 @@ void main(void) {
 	float diff = dot(normal, light) * 0.6 + 0.4;
 	
 	// combine colors
-	vec3 col = vec3(0.5, 0.2, 0.5);
+	vec3 col = vec3(0.0, 0.55, 0.75);
 	col = col * diff;
 	
 	//gl_FragColor = vec4(normal,step(0.01, height));

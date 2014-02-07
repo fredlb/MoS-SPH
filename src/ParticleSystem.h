@@ -17,6 +17,7 @@ public:
 	void advance();
 	long int draw_counter;
 	void drawParticle(float x, float y, bool is_static);
+	void reloadParticleSystem();
 
 private:
 	#define MAX_NEIGHBOURS 64
@@ -58,6 +59,7 @@ private:
 	void calculateMass();
 	void moveParticles();
 	void createBorderParticles();
+	
 
 	long int advance_call;
 };

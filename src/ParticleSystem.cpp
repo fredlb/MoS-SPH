@@ -63,6 +63,14 @@ ParticleSystem::ParticleSystem(void)
 	draw_counter = 0;
 }
 
+void ParticleSystem::reloadParticleSystem()
+{
+	createParticleField();
+	updateGrid();
+	advance_call = 0;
+	draw_counter = 0;
+}
+
 std::vector<vec2> ParticleSystem::getParticleCoordinates()
 {
 	std::vector<vec2> coordinateVector(particles.size());

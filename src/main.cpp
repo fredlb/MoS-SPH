@@ -36,6 +36,7 @@ GLuint gradientProgramID = 0;
 std::vector<vec2> pointsToDraw;
 int current_time;
 bool POINTS_MODE = true;
+bool POINTS_RELOAD = true;
 
 
 int main (int argc, char** argv) {
@@ -91,10 +92,16 @@ void render()
 	//draw points here
 
 
+	if(!POINTS_RELOAD)
+	{
+		simulation->reloadParticleSystem();
+		POINTS_RELOAD = true;
+	}
+
 	pointsToDraw = simulation->getParticleCoordinates();
 	if(POINTS_MODE)
 	{
-		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 1.0);
+		drawPoints(pointsToDraw, 0.0, 0.55, 0.75, 1.0, 1.0);
 	}
 	else
 	{
@@ -119,7 +126,7 @@ void update()
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size)
 {
 
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glUseProgram (programID);
 	GLint loc = glGetUniformLocation(programID, "uColor");
@@ -203,6 +210,18 @@ void keyPressed(unsigned char c, int x, int y)
 		else
 		{
 			POINTS_MODE = true;
+		}
+	}
+
+	if(c == 'r')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
 		}
 	}
 	
