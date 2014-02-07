@@ -74,6 +74,17 @@ std::vector<vec2> ParticleSystem::getParticleCoordinates()
 	return coordinateVector;
 }
 
+std::vector<vec2> ParticleSystem::getParticleCoordinatesBorder()
+{
+	std::vector<vec2> coordinateVector(border_particles.size());
+	for(int i = 0; i < border_particles.size(); ++i)
+	{
+		coordinateVector[i] = border_particles[i].position/SIM_SCALE;
+	}
+
+	return coordinateVector;
+}
+
 std::vector<vec2> ParticleSystem::getParticleCoordinatesNeighbours()
 {
 	int particle_index = (advance_call/20)%MAX_PARTICLES;
@@ -105,6 +116,7 @@ std::vector<vec2> ParticleSystem::getParticleCoordinatesPressure(float dir, floa
 	return coordinateVector;
 }
 
+
 #define OFFSET BORDER_LEFT + 0.1
 void ParticleSystem::createParticleField()
 {
@@ -113,11 +125,11 @@ void ParticleSystem::createParticleField()
 	int rowcolSize = sqrt(MAX_PARTICLES);
 	for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
 	{
-		float stepLength = 0.0038;
+		float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
 		for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 		{
 			particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
-			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.002 + particleIndexRow*stepLength;
+			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.2 + particleIndexRow*stepLength;
 			particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
 		}
 	}
@@ -126,10 +138,13 @@ void ParticleSystem::createParticleField()
 void ParticleSystem::createBorderParticles()
 {
 	border_particles.resize(MAX_BORDER_PARTICLES);
+	float stepLength = (BORDER_RIGHT - BORDER_LEFT)/(MAX_BORDER_PARTICLES*SIM_SCALE);
 	for( int i = 0; i < MAX_BORDER_PARTICLES; ++i)
 	{
-		float stepLength = (BORDER_RIGHT - BORDER_LEFT)/MAX_BORDER_PARTICLES;
+		border_particles[i].pressure = 1000;
+		border_particles[i].density = 1000;
 		border_particles[i].position.x = BORDER_LEFT + i*stepLength;
+		border_particles[i].position.y = BORDER_BOTTOM+0.1;
 	}
 }
 
@@ -172,8 +187,7 @@ void ParticleSystem::updateNeighbours()
 
 		
 		//Loop over border
-		/*
-		for(int j=0; j<MAX_BORDER_PARTICLES; j++)
+		/*for(int j=0; j<MAX_BORDER_PARTICLES; j++)
 		{
 			particle& pj = border_particles[j];
 			vec2 distance_vector = (pi.position - pj.position);
@@ -185,11 +199,10 @@ void ParticleSystem::updateNeighbours()
 					pi.neighbours[pi.neighbour_count] = &pj;
 					pi.neighbour_distance[pi.neighbour_count] = sqrt(distance2);
 					++pi.neighbour_count;
-					std::cout << "I'm on the border" << std::endl;
+					//std::cout << "I'm on the border" << std::endl;
 				}
 			}
-		}
-		*/
+		}*/
 		
 		//loop over adjacent cells
 		for (int ni=gi-1; ni<=gi+1; ++ni)

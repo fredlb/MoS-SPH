@@ -11,6 +11,7 @@ public:
 	std::vector<vec2> getParticleCoordinates();
 	std::vector<vec2> getParticleCoordinatesNeighbours();
 	std::vector<vec2> getParticleCoordinatesGrid();
+	std::vector<vec2> getParticleCoordinatesBorder();
 #define PRESSURE_UNDER 1.0
 #define PRESSURE_OVER -1.0
 	std::vector<vec2> getParticleCoordinatesPressure(float dir, float limit);

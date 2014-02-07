@@ -94,12 +94,24 @@ void render()
 	pointsToDraw = simulation->getParticleCoordinates();
 	if(POINTS_MODE)
 	{
-		drawPoints(pointsToDraw, 0.5, 0.2, 0.5, 1.0, 1.0);
+		drawPoints(pointsToDraw, 0.0, 0.55, 0.75, 1.0, 1.0);
 	}
 	else
 	{
 		drawMetaballs(pointsToDraw);
 	}
+
+	/*
+	pointsToDraw = simulation->getParticleCoordinatesBorder();
+	if(POINTS_MODE)
+	{
+		drawPoints(pointsToDraw, 0.0, 0.55, 0.75, 1.0, 1.0);
+	}
+	else
+	{
+		drawMetaballs(pointsToDraw);
+	}*/
+	
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_UNDER,150.0), 1.0, 0.0, 0.0, 0.5, 5.0);
 	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_OVER,150.0), 0.0, 1.0, 0.0, 0.5, 5.0);
 
@@ -119,7 +131,7 @@ void update()
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size)
 {
 
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glUseProgram (programID);
 	GLint loc = glGetUniformLocation(programID, "uColor");
