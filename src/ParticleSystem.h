@@ -57,6 +57,7 @@ private:
 	void calculateSPHForce();
 	void calculateMass();
 	void moveParticles();
+	void createBorderParticles();
 
 	long int advance_call;
 };

@@ -11,6 +11,7 @@
 #define PI 3.1415926535f
 
 #define MAX_PARTICLES 16384
+#define MAX_BORDER_PARTICLES 1000
 #define averageParticles 20
 
 #define BORDER_LEFT -0.8
@@ -21,7 +22,7 @@
 #define SIM_HEIGHT 1.6
 
 #define SIM_SCALE (SIM_WIDTH/2)
-#define TIME_STEP 0.001 //s
+#define TIME_STEP 0.0005 //s
 #define INTERACTION_RADIUS 0.005 //m
 
 #define INTERACTION_RADIUS2 (INTERACTION_RADIUS*INTERACTION_RADIUS)
@@ -33,7 +34,7 @@
 #define EPSILON	0.0000001f			//for collision detection
 
 
-#define STIFFNESS 2.0 //
+#define STIFFNESS 5.0 //
 #define VISCOSITY 0.2 // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
@@ -54,6 +55,7 @@ ParticleSystem::ParticleSystem(void)
 	particles.resize(MAX_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
 	createParticleField();
+	createBorderParticles();
 	updateGrid();
 	calculateMass();
 	std::cout << "Particle mass: " << PARTICLE_MASS << std::endl;
@@ -121,6 +123,17 @@ void ParticleSystem::createParticleField()
 	}
 }
 
+void ParticleSystem::createBorderParticles()
+{
+	border_particles.resize(MAX_BORDER_PARTICLES);
+	for( int i = 0; i < MAX_BORDER_PARTICLES; ++i)
+	{
+		float stepLength = (BORDER_RIGHT - BORDER_LEFT)/MAX_BORDER_PARTICLES;
+		border_particles[i].position.x = BORDER_LEFT + i*stepLength;
+	}
+}
+
+
 void ParticleSystem::updateGrid()
 {
 	memset(&grid[0], 0, grid.size()*sizeof(grid[0]));
@@ -156,6 +169,28 @@ void ParticleSystem::updateNeighbours()
 		pi.neighbour_count = 0;
 		size_t gi = pi.grid_x;
 		size_t gj = pi.grid_y*GRID_WIDTH;
+
+		
+		//Loop over border
+		/*
+		for(int j=0; j<MAX_BORDER_PARTICLES; j++)
+		{
+			particle& pj = border_particles[j];
+			vec2 distance_vector = (pi.position - pj.position);
+			float distance2 = dot(distance_vector,distance_vector);
+			if(distance2 < INTERACTION_RADIUS2)
+			{
+				if(pi.neighbour_count < MAX_NEIGHBOURS)
+				{
+					pi.neighbours[pi.neighbour_count] = &pj;
+					pi.neighbour_distance[pi.neighbour_count] = sqrt(distance2);
+					++pi.neighbour_count;
+					std::cout << "I'm on the border" << std::endl;
+				}
+			}
+		}
+		*/
+		
 		//loop over adjacent cells
 		for (int ni=gi-1; ni<=gi+1; ++ni)
 		{
@@ -306,23 +341,8 @@ void ParticleSystem::moveParticles()
 			acceleration *= VEL_LIMIT / sqrt(speed);
 		}
 
-		/*
-		if(pi.position.y < -1)
-		{
-			current = pi.position.y;
-			u = pi.velocity.x;
-			v = pi.velocity.y;
-			cp = -1;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-			pi.position.x = cp + d*n;
-			pi.velocity_eval.y = v - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
-			pi.velocity_eval.x = u;
-		}*/
-
 		acceleration.y += -9.81;
-
+		
 		diff = 2 * PARTICLE_RADIUS - (pi.position.y - BORDER_LEFT);
 		if( diff > EPSILON)
 		{
@@ -375,6 +395,7 @@ void ParticleSystem::moveParticles()
 
 		if(pi.position.x > BORDER_RIGHT)
 			pi.position.x = BORDER_RIGHT;
+		
 
 		//leapfrog integration
 		vec2 velocity_next = pi.velocity + acceleration*TIME_STEP;
@@ -384,6 +405,47 @@ void ParticleSystem::moveParticles()
 		pi.position += velocity_next;
 
 
+		/*if(pi.position.y < BORDER_BOTTOM)
+		{
+			current = pi.position.y;
+			u = pi.velocity.x;
+			v = pi.velocity.y;
+			cp = BORDER_BOTTOM;
+
+			d = sqrt((cp-current)*(cp-current));
+			n = 1;
+			pi.position.y = cp + d*n;
+			pi.velocity_eval.y = 0.0f; //v - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(v*n)*n;
+			pi.velocity_eval.x = u;
+		}
+
+		if(pi.position.x < BORDER_LEFT)
+		{
+			current = pi.position.x;
+			u = pi.velocity.x;
+			v = pi.velocity.y;
+			cp = BORDER_LEFT;
+
+			d = sqrt((cp-current)*(cp-current));
+			n = 1;
+			pi.position.x = cp + d*n;
+			pi.velocity_eval.x = 0.0f; //u - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
+			pi.velocity_eval.y = v;
+		}
+
+		if(pi.position.x > BORDER_RIGHT)
+		{
+			current = pi.position.x;
+			u = pi.velocity.x;
+			v = pi.velocity.y;
+			cp = BORDER_RIGHT;
+
+			d = sqrt((cp-current)*(cp-current));
+			n = 1;
+			pi.position.x = cp - d*n;
+			pi.velocity_eval.x = 0.0f; //u - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
+			pi.velocity_eval.y = v;
+		}*/
 
 	}
 
