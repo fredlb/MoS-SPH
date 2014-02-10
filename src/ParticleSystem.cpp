@@ -34,8 +34,8 @@
 #define EPSILON	0.0000001f			//for collision detection
 
 
-#define STIFFNESS 5.0 //
-#define VISCOSITY 0.2 // pascal-seconds
+#define STIFFNESS 10.0 //
+#define VISCOSITY 1.0 // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
@@ -186,7 +186,7 @@ void ParticleSystem::updateGrid()
 
 void ParticleSystem::updateNeighbours()
 {
-	#pragma omp parallel for
+	#pragma omp parallel for schedule(dynamic)
 	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
 		particle& pi = particles[i];
@@ -215,6 +215,7 @@ void ParticleSystem::updateNeighbours()
 		}*/
 		
 		//loop over adjacent cells
+		#pragma omp parallel for
 		for (int ni=gi-1; ni<=gi+1; ++ni)
 		{
 			for (int nj=gj-GRID_WIDTH; nj<=gj+GRID_WIDTH; nj+=GRID_WIDTH)
@@ -281,7 +282,7 @@ void ParticleSystem::calculateMass()
 void ParticleSystem::calculatePressure()
 {
 	//float c;
-	#pragma omp parallel for
+	#pragma omp parallel for schedule(guided)
 	for(int j = 0; j < MAX_PARTICLES; j++)
 	{
 		particle& pi = particles[j];
@@ -309,7 +310,7 @@ void ParticleSystem::calculatePressure()
 
 void ParticleSystem::calculateSPHForce()
 {
-	#pragma omp parallel for 
+	#pragma omp parallel for schedule(guided)
 	for(int j = 0; j < MAX_PARTICLES; j++)
 	{
 		particle& pi = particles[j];
@@ -352,9 +353,10 @@ void ParticleSystem::moveParticles()
 	float SL2 = VEL_LIMIT*VEL_LIMIT;
 	vec2 norm;
 
-
-	for(particle& pi : particles)
+	#pragma omp parallel for schedule(guided)
+	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
+		particle& pi = particles[i];
 		if(pi.is_static) continue;
 		vec2 acceleration = pi.force*PARTICLE_MASS;
 
