@@ -36,7 +36,8 @@ GLuint gradientProgramID = 0;
 std::vector<vec2> pointsToDraw;
 int current_time;
 bool POINTS_MODE = true;
-bool POINTS_RELOAD = true;
+int POINTS_RELOAD = true;
+char keyPress;
 
 
 int main (int argc, char** argv) {
@@ -94,7 +95,7 @@ void render()
 
 	if(!POINTS_RELOAD)
 	{
-		simulation->reloadParticleSystem();
+		simulation->reloadParticleSystem(keyPress);
 		POINTS_RELOAD = true;
 	}
 
@@ -235,6 +236,45 @@ void keyPressed(unsigned char c, int x, int y)
 		{
 			POINTS_RELOAD = true;
 		}
+	}
+
+	if(c == '1')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '1';
+	}
+
+	if(c == '2')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '2';
+	}
+
+		if(c == '3')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '3';
 	}
 	
 }

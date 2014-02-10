@@ -72,6 +72,80 @@ void ParticleSystem::reloadParticleSystem()
 	draw_counter = 0;
 }
 
+
+void ParticleSystem::reloadParticleSystem(char c)
+{
+	memset(&particles[0], 0, particles.size()*sizeof(particles[0]));
+	particles.resize(MAX_PARTICLES);
+	int rowcolSize = sqrt(MAX_PARTICLES);
+	switch (c)
+	{
+	case '1':
+		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
+		{
+			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
+			for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
+			{
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.002 + particleIndexRow*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
+			}
+		}
+		break;
+
+	case '2':
+		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
+		{
+			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
+			for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
+			{
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.2 + particleIndexRow*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
+			}
+		}
+		break;
+
+	case '3':
+		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
+		{
+			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
+			for(int particleIndexCol = 0; particleIndexCol < (rowcolSize/2); ++particleIndexCol)
+			{
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.2 + particleIndexRow*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
+			}
+		}
+		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
+		{
+			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
+			for(int particleIndexCol = (rowcolSize/2); particleIndexCol < rowcolSize; ++particleIndexCol)
+			{
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_RIGHT-stepLength*(rowcolSize) + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.2 + particleIndexRow*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
+			}
+		}
+		break;
+	default:
+		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
+		{
+			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
+			for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
+			{
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.002 + particleIndexRow*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
+			}
+		}
+		break;
+	}
+	updateGrid();
+	advance_call = 0;
+	draw_counter = 0;
+}
+
 std::vector<vec2> ParticleSystem::getParticleCoordinates()
 {
 	std::vector<vec2> coordinateVector(particles.size());

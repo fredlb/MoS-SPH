@@ -19,6 +19,7 @@ public:
 	long int draw_counter;
 	void drawParticle(float x, float y, bool is_static);
 	void reloadParticleSystem();
+	void reloadParticleSystem(char c);
 
 private:
 	#define MAX_NEIGHBOURS 64
