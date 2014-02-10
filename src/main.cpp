@@ -264,7 +264,7 @@ void keyPressed(unsigned char c, int x, int y)
 		keyPress = '2';
 	}
 
-		if(c == '3')
+	if(c == '3')
 	{
 		if(POINTS_RELOAD)
 		{
@@ -275,6 +275,19 @@ void keyPressed(unsigned char c, int x, int y)
 			POINTS_RELOAD = true;
 		}
 		keyPress = '3';
+	}
+
+	if(c == '4')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '4';
 	}
 	
 }
