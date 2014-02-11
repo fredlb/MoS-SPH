@@ -386,5 +386,31 @@ void keyPressed(unsigned char c, int x, int y)
 		}
 		keyPress = '8';
 	}
+
+	if(c == '9')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '9';
+	}
+
+	if(c == '0')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '0';
+	}
 	
 }

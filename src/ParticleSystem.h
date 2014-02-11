@@ -32,6 +32,7 @@ private:
 		vec2 force;
 		float pressure;
 		float density;
+		float mass;
 
 		//neighbour list
 		particle* neighbours[MAX_NEIGHBOURS];
@@ -62,6 +63,7 @@ private:
 	void moveParticles();
 	void createBorderParticles();
 	void EmitParticles();
+	void setBorderParticles();
 
 	float Random01() { return (float)rand() / (float)(RAND_MAX-1); }
 	float Random(float a, float b) { return a + (b-a)*Random01(); }
@@ -72,6 +74,7 @@ private:
 	int particleCount;
 	int emitStep;
 	char keyPressed;
+	int borderParticleCount;
 
 	float mouseX;
 	float mouseY;
