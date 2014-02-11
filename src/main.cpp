@@ -39,6 +39,48 @@ bool POINTS_MODE = true;
 int POINTS_RELOAD = true;
 char keyPress;
 
+bool lbuttonDown = false;
+bool rbuttonDown = false;
+int mouseX;
+int mouseY;
+void mouse(int button, int state, int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if(button == GLUT_RIGHT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			//std::cout <<"Right button pressed at (" <<x <<","<<y << std::endl;
+			rbuttonDown = true;
+		}else{
+			rbuttonDown = false;
+		}
+
+	}
+	else if(button == GLUT_LEFT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			//std::cout <<"Left button pressed at (" <<x <<","<<y << ")"<< std::endl;
+			lbuttonDown = true;
+		}else{
+			lbuttonDown = false;
+		}
+	}
+}
+
+void motion(int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if (lbuttonDown){}
+		//std::cout << "Mouse dragged with left button at "
+		//<< "(" << x << "," << y << ")" << std::endl;
+			if(rbuttonDown){}
+		//std::cout << "Mouse dragged with right button at "
+		//<< "(" << x << "," << y << ")" << std::endl;
+}
 
 int main (int argc, char** argv) {
 	current_time = glutGet(GLUT_ELAPSED_TIME);
@@ -51,6 +93,8 @@ int main (int argc, char** argv) {
 	glutDisplayFunc(render);
 	glutIdleFunc(update);
     glutKeyboardFunc(keyPressed);
+	glutMouseFunc(mouse);
+	glutMotionFunc(motion);
 	// start GLEW extension handler
 	glewExperimental = GL_TRUE;
 	glewInit ();
@@ -129,6 +173,7 @@ void render()
 
 void update()
 {
+	simulation->updateMouseState((float) mouseX/kWindowWidth,(float) mouseY/kWindowHeight,lbuttonDown,rbuttonDown);
 	for(int i = 0; i < 7; ++i)
 	{
 		simulation->advance();
@@ -314,6 +359,32 @@ void keyPressed(unsigned char c, int x, int y)
 			POINTS_RELOAD = true;
 		}
 		keyPress = '6';
+	}
+
+	if(c == '7')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '7';
+	}
+
+	if(c == '8')
+	{
+		if(POINTS_RELOAD)
+		{
+			POINTS_RELOAD = false;
+		}
+		else
+		{
+			POINTS_RELOAD = true;
+		}
+		keyPress = '8';
 	}
 	
 }

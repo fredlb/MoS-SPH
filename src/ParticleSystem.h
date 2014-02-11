@@ -20,7 +20,7 @@ public:
 	void drawParticle(float x, float y, bool is_static);
 	void reloadParticleSystem();
 	void reloadParticleSystem(char c);
-
+	void updateMouseState(float x, float y, bool lpressed, bool rpressed);
 private:
 	#define MAX_NEIGHBOURS 64
 	struct particle
@@ -62,10 +62,20 @@ private:
 	void moveParticles();
 	void createBorderParticles();
 	void EmitParticles();
+
+	float Random01() { return (float)rand() / (float)(RAND_MAX-1); }
+	float Random(float a, float b) { return a + (b-a)*Random01(); }
+ 
 	
 
 	long int advance_call;
 	int particleCount;
+	int emitStep;
 	char keyPressed;
+
+	float mouseX;
+	float mouseY;
+	bool lButtonPressed;
+	bool rButtonPressed;
 };
 

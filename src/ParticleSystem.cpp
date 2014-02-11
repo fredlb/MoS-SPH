@@ -62,6 +62,7 @@ ParticleSystem::ParticleSystem(void)
 	advance_call = 0;
 	draw_counter = 0;
 	particleCount = 0;
+	emitStep = 0;
 }
 
 void ParticleSystem::reloadParticleSystem()
@@ -157,7 +158,11 @@ void ParticleSystem::reloadParticleSystem(char c)
 		break;
 	case '5':
 	case '6':
+	case '7':
+	case '8':
 		particleCount=0;
+		emitStep = 0;
+		particles.resize(0);
 		break;
 	default:
 		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
@@ -583,8 +588,15 @@ void ParticleSystem::moveParticles()
 
 void ParticleSystem::advance()
 {
-	if(keyPressed == '5' || keyPressed == '6'){
-		EmitParticles();
+	if(keyPressed == '5' || keyPressed == '6' || keyPressed == '7'
+		|| keyPressed == '8')
+	{
+		if(emitStep == 0)
+		{
+			EmitParticles();
+			emitStep=10;
+		}
+		emitStep--;
 	}
 	updateGrid();
 	updateNeighbours();
@@ -620,10 +632,10 @@ void ParticleSystem::EmitParticles()
 			particles.resize(particleCount+borderSize);
 			for(int i=0; i<borderSize; i++)
 			{
-				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*stepLength;
+				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*(stepLength/2);
 				particles[particleCount+i].position.y = 0.5-i*stepLength;
-				particles[particleCount+i].velocity.x = 2.0;
-				particles[particleCount+i].velocity.y = 1.0;
+				particles[particleCount+i].velocity.x = 50*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i].velocity.y = 50*borderSize*(stepLength/2)*Random(0.9,1.1);
 			
 			}
 			particleCount += borderSize;
@@ -636,18 +648,66 @@ void ParticleSystem::EmitParticles()
 			particles.resize(particleCount+2*borderSize);
 			for(int i=0; i<borderSize; i++)
 			{
-				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*stepLength;
+				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*(stepLength/2);
 				particles[particleCount+i].position.y = 0.5-i*stepLength;
-				particles[particleCount+i].velocity.x = 2.0;
-				particles[particleCount+i].velocity.y = 1.0;
+				particles[particleCount+i].velocity.x = 50*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i].velocity.y = 50*borderSize*(stepLength/2)*Random(0.9,1.1);
 				
-				particles[particleCount+i+borderSize].position.x = BORDER_RIGHT-0.01-i*stepLength;
+				particles[particleCount+i+borderSize].position.x = BORDER_RIGHT-0.01-i*(stepLength/2);
 				particles[particleCount+i+borderSize].position.y = 0.5-i*stepLength;
-				particles[particleCount+i+borderSize].velocity.x = -2.0;
-				particles[particleCount+i+borderSize].velocity.y = 1.0;
+				particles[particleCount+i+borderSize].velocity.x = -50*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i+borderSize].velocity.y = 50*borderSize*(stepLength/2)*Random(0.9,1.1);
 			
 			}
 			particleCount += 2*borderSize;
 		}
 	}
+
+	if(keyPressed == '7')
+	{
+		if(particleCount+2*borderSize < MAX_PARTICLES)
+		{
+			particles.resize(particleCount+2*borderSize);
+			for(int i=0; i<borderSize; i++)
+			{
+				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*(stepLength/2);
+				particles[particleCount+i].position.y = -0.1-i*stepLength;
+				particles[particleCount+i].velocity.x = 60*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i].velocity.y = 60*borderSize*(stepLength/2)*Random(0.9,1.1);
+			
+				particles[particleCount+i+borderSize].position.x = BORDER_LEFT+0.01+i*(stepLength/2);
+				particles[particleCount+i+borderSize].position.y = 0.1-i*stepLength;
+				particles[particleCount+i+borderSize].velocity.x = 50*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i+borderSize].velocity.y = 50*borderSize*(stepLength/2)*Random(0.9,1.1);
+			
+			}
+			particleCount += 2*borderSize;
+		}
+	}
+	if(keyPressed == '8')
+		if(lButtonPressed)
+		{
+			if(particleCount+borderSize < MAX_PARTICLES){
+			particles.resize(particleCount+borderSize);
+			for(int i=0; i<borderSize; i++)
+			{
+				particles[particleCount+i].position.x = mouseX+Random(-0.04,0.04);
+				particles[particleCount+i].position.y = mouseY+Random(-0.04,0.04);
+				/*particles[particleCount+i].velocity.x = 50*borderSize*stepLength*Random(0.9,1.1);
+				particles[particleCount+i].velocity.y = 50*borderSize*(stepLength/2)*Random(0.9,1.1);
+				*/
+			
+			}
+			particleCount += borderSize;
+		}
+		std::cout << "Mouse is at " << mouseX << " and " << mouseY << std::endl;
+		}
 }
+
+void ParticleSystem::updateMouseState(float x, float y, bool lpressed, bool rpressed)
+	{
+		mouseX = x*(BORDER_RIGHT-BORDER_LEFT)-BORDER_RIGHT;
+		mouseY = BORDER_TOP-y*(BORDER_TOP - BORDER_BOTTOM);
+		lButtonPressed = lpressed;
+		rButtonPressed=rpressed;
+	};
