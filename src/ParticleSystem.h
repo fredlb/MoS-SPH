@@ -61,8 +61,10 @@ private:
 	void calculateMass();
 	void moveParticles();
 	void createBorderParticles();
+	void EmitParticles();
 	
 
 	long int advance_call;
+	int particleCount;
 };
 

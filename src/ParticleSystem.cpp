@@ -44,7 +44,7 @@
 #define PARTICLE_RADIUS 0.004 // m
 #define EXT_DAMP 512.0
 
-float PARTICLE_MASS =  0.0f;
+float PARTICLE_MASS =  0.000159963f;
 
 const float W_DEFAULT = 315.0f / (64.0f * 3.141592 * pow( INTERACTION_RADIUS, 9) );
 const float	W_GRAD_PRESSURE = -45.0f / (3.141592 * pow( INTERACTION_RADIUS, 6) );
@@ -54,13 +54,14 @@ ParticleSystem::ParticleSystem(void)
 {
 	particles.resize(MAX_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
-	createParticleField();
-	createBorderParticles();
-	updateGrid();
-	calculateMass();
+	//createParticleField();
+	//createBorderParticles();
+	//updateGrid();
+	//calculateMass();
 	std::cout << "Particle mass: " << PARTICLE_MASS << std::endl;
 	advance_call = 0;
 	draw_counter = 0;
+	particleCount = 0;
 }
 
 void ParticleSystem::reloadParticleSystem()
@@ -286,7 +287,7 @@ void ParticleSystem::updateGrid()
 void ParticleSystem::updateNeighbours()
 {
 	#pragma omp parallel for schedule(dynamic)
-	for(int i = 0; i < MAX_PARTICLES; i++)
+	for(int i = 0; i < particles.size(); i++)
 	{
 		particle& pi = particles[i];
 		pi.neighbour_count = 0;
@@ -577,6 +578,7 @@ void ParticleSystem::moveParticles()
 
 void ParticleSystem::advance()
 {
+	EmitParticles();
 	updateGrid();
 	updateNeighbours();
 	calculatePressure();
@@ -598,5 +600,17 @@ void ParticleSystem::drawParticle(float x, float y, bool is_static)
 	else
 	{
 		particles[draw_counter%particles.size()] = p;
+	}
+}
+
+void ParticleSystem::EmitParticles()
+{
+	particles.resize(particleCount+1);
+	if(particleCount < MAX_PARTICLES){
+		particles[particleCount].position.x = BORDER_LEFT+0.01;
+		particles[particleCount].position.y = 0.5;
+		particles[particleCount].velocity.x = 2.0;
+		particles[particleCount].velocity.y = 1.0;
+		particleCount++;
 	}
 }
