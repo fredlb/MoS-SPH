@@ -54,10 +54,10 @@ ParticleSystem::ParticleSystem(void)
 {
 	particles.resize(MAX_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
-	//createParticleField();
+	createParticleField();
 	//createBorderParticles();
-	//updateGrid();
-	//calculateMass();
+	updateGrid();
+	calculateMass();
 	std::cout << "Particle mass: " << PARTICLE_MASS << std::endl;
 	advance_call = 0;
 	draw_counter = 0;
@@ -79,6 +79,7 @@ void ParticleSystem::reloadParticleSystem(char c)
 	memset(&particles[0], 0, particles.size()*sizeof(particles[0]));
 	particles.resize(MAX_PARTICLES);
 	int rowcolSize = sqrt(MAX_PARTICLES);
+	keyPressed = c;
 	switch (c)
 	{
 	case '1':
@@ -136,7 +137,7 @@ void ParticleSystem::reloadParticleSystem(char c)
 			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
 			for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 			{
-				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.005 + particleIndexCol*stepLength;
+				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.01 + particleIndexCol*stepLength;
 				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_TOP-stepLength*rowcolSize + particleIndexRow*stepLength;
 				particles[particleIndexCol + rowcolSize*particleIndexRow].velocity.x = 1;
 				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
@@ -153,6 +154,10 @@ void ParticleSystem::reloadParticleSystem(char c)
 				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
 			}
 		}
+		break;
+	case '5':
+	case '6':
+		particleCount=0;
 		break;
 	default:
 		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
@@ -238,7 +243,7 @@ void ParticleSystem::createParticleField()
 		for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
 		{
 			particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
-			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.2 + particleIndexRow*stepLength;
+			particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.002 + particleIndexRow*stepLength;
 			particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
 		}
 	}
@@ -578,7 +583,9 @@ void ParticleSystem::moveParticles()
 
 void ParticleSystem::advance()
 {
-	EmitParticles();
+	if(keyPressed == '5' || keyPressed == '6'){
+		EmitParticles();
+	}
 	updateGrid();
 	updateNeighbours();
 	calculatePressure();
@@ -605,12 +612,42 @@ void ParticleSystem::drawParticle(float x, float y, bool is_static)
 
 void ParticleSystem::EmitParticles()
 {
-	particles.resize(particleCount+1);
-	if(particleCount < MAX_PARTICLES){
-		particles[particleCount].position.x = BORDER_LEFT+0.01;
-		particles[particleCount].position.y = 0.5;
-		particles[particleCount].velocity.x = 2.0;
-		particles[particleCount].velocity.y = 1.0;
-		particleCount++;
+	int borderSize = 10;
+	float stepLength = 0.0038;
+	if(keyPressed == '5')
+	{
+		if(particleCount+borderSize < MAX_PARTICLES){
+			particles.resize(particleCount+borderSize);
+			for(int i=0; i<borderSize; i++)
+			{
+				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*stepLength;
+				particles[particleCount+i].position.y = 0.5-i*stepLength;
+				particles[particleCount+i].velocity.x = 2.0;
+				particles[particleCount+i].velocity.y = 1.0;
+			
+			}
+			particleCount += borderSize;
+		}
+	}
+	if(keyPressed == '6')
+	{
+		if(particleCount+2*borderSize < MAX_PARTICLES)
+		{
+			particles.resize(particleCount+2*borderSize);
+			for(int i=0; i<borderSize; i++)
+			{
+				particles[particleCount+i].position.x = BORDER_LEFT+0.01+i*stepLength;
+				particles[particleCount+i].position.y = 0.5-i*stepLength;
+				particles[particleCount+i].velocity.x = 2.0;
+				particles[particleCount+i].velocity.y = 1.0;
+				
+				particles[particleCount+i+borderSize].position.x = BORDER_RIGHT-0.01-i*stepLength;
+				particles[particleCount+i+borderSize].position.y = 0.5-i*stepLength;
+				particles[particleCount+i+borderSize].velocity.x = -2.0;
+				particles[particleCount+i+borderSize].velocity.y = 1.0;
+			
+			}
+			particleCount += 2*borderSize;
+		}
 	}
 }

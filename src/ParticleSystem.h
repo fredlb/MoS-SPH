@@ -66,5 +66,6 @@ private:
 
 	long int advance_call;
 	int particleCount;
+	char keyPressed;
 };
 
