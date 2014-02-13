@@ -73,6 +73,7 @@ private:
 	long int advance_call;
 	int particleCount;
 	int emitStep;
+	int borderStep;
 	char keyPressed;
 	int borderParticleCount;
 

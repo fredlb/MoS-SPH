@@ -146,7 +146,7 @@ void render()
 	pointsToDraw = simulation->getParticleCoordinates();
 	if(POINTS_MODE)
 	{
-		drawPoints(pointsToDraw, 0.0, 0.55, 0.75, 1.0, 1.0);
+		drawPoints(pointsToDraw, 0.2, 0.55, 0.75, 1.0, 1.0);
 	}
 	else
 	{
