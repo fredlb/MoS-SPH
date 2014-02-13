@@ -34,8 +34,8 @@
 #define EPSILON	0.0000001f			//for collision detection
 
 
-#define STIFFNESS 10.0 //
-#define VISCOSITY 1.0 // pascal-seconds
+#define STIFFNESS 12.0 //
+#define VISCOSITY 3.5 // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
@@ -648,7 +648,7 @@ void ParticleSystem::advance()
 		if(emitStep == 0)
 		{
 			EmitParticles();
-			emitStep=10;
+			emitStep=6;
 		}
 		emitStep--;
 	}
