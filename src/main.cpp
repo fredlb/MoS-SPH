@@ -246,7 +246,7 @@ void drawMetaballs(std::vector<vec2> points)
     glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
 
-    glPointSize(10.0);
+    glPointSize(20.0);
 
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
