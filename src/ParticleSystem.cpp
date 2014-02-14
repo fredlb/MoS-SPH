@@ -422,7 +422,7 @@ void ParticleSystem::calculatePressure()
 {
 	//float c;
 	#pragma omp parallel for schedule(guided)
-	for(int j = 0; j < MAX_PARTICLES; j++)
+	for(int j = 0; j < particles.size(); j++)
 	{
 		particle& pi = particles[j];
 		float sum = 0.0;
@@ -460,7 +460,7 @@ void ParticleSystem::calculatePressure()
 void ParticleSystem::calculateSPHForce()
 {
 	#pragma omp parallel for schedule(guided)
-	for(int j = 0; j < MAX_PARTICLES; j++)
+	for(int j = 0; j < particles.size(); j++)
 	{
 		particle& pi = particles[j];
 		if(pi.is_static) continue;
