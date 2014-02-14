@@ -171,25 +171,10 @@ void ParticleSystem::reloadParticleSystem(char c)
 	case '6':
 	case '7':
 	case '8':
+	case '9':
 		particleCount=0;
 		emitStep = 0;
 		particles.resize(0);
-		break;
-	case '9':
-		memset(&border_particles[0], 0, border_particles.size()*sizeof(border_particles[0]));
-		borderParticleCount = 0;
-		border_particles.resize(0);
-		particleCount = MAX_PARTICLES;
-		for(int particleIndexRow = 0; particleIndexRow < rowcolSize; ++particleIndexRow)
-		{
-			float stepLength = 0.0038; //(BORDER_RIGHT - BORDER_LEFT)/(3*rowcolSize);
-			for(int particleIndexCol = 0; particleIndexCol < rowcolSize; ++particleIndexCol)
-			{
-				particles[particleIndexCol + rowcolSize*particleIndexRow].position.x = BORDER_LEFT+0.002 + particleIndexCol*stepLength;
-				particles[particleIndexCol + rowcolSize*particleIndexRow].position.y = BORDER_BOTTOM+0.002 + particleIndexRow*stepLength;
-				particles[particleIndexCol + rowcolSize*particleIndexRow].is_static = false;
-			}
-		}
 		break;
 	case '0':
 		particleCount = MAX_PARTICLES;
@@ -497,7 +482,21 @@ void ParticleSystem::calculateSPHForce()
 			forcex += ( pressure_term * distance_vector.x + viscosity_term * (pj.velocity_eval.x - pi.velocity_eval.x) ) * density_term;
 			//#pragma omp atomic
 			forcey += ( pressure_term * distance_vector.y + viscosity_term * (pj.velocity_eval.y - pi.velocity_eval.y) ) * density_term;
-			
+			if(pj.is_static)
+			{
+				forcex = 0;//pressure_term;
+				forcey = 0;//pressure_term;
+				float A = atan2(pi.position.y - pj.position.y,pi.position.x-pj.position.x);
+				float vx = cos(pi.velocity.x-A);
+				float vy = cos(pi.velocity.y-A);
+
+				float fx = vx*(pi.mass - pj.mass);
+				float fy = vy*(pi.mass - pj.mass);
+				pi.velocity.x = 0.2*(fx+A);
+				pi.velocity.y = 0.2*(fy+A);
+
+
+			}
 
 			//force += ( pressure_term * distance_vector + viscosity_term * (pj.velocity_eval - pi.velocity_eval) ) * density_term;
 		}
@@ -812,10 +811,10 @@ void ParticleSystem::setBorderParticles(){
 		particles[totParticleCount+9].position.y = mouseY-stepLength;
 
 		for(int i=0; i<10; i++){
-			particles[totParticleCount+i].density = 10000;
-			particles[totParticleCount+i].pressure = STIFFNESS*10000;
+			particles[totParticleCount+i].density = 1000;
+			particles[totParticleCount+i].pressure = STIFFNESS*1000;
 			particles[totParticleCount+i].is_static = true;
-			particles[totParticleCount+i].mass = 1;
+			particles[totParticleCount+i].mass = PARTICLE_MASS;
 			particles[totParticleCount+i].velocity_eval.x = 0.0f;
 			particles[totParticleCount+i].velocity_eval.y = 0.0f;
 			borderParticleCount++;
