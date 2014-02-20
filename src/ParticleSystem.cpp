@@ -210,23 +210,20 @@ std::vector<vec2> ParticleSystem::getParticleCoordinates()
 	std::vector<vec2> coordinateVector(particles.size());
 	for(int i = 0; i < particles.size(); ++i)
 	{
-		coordinateVector[i] = particles[i].position/SIM_SCALE;
+		if(particles[i].is_static == false)
+			coordinateVector[i] = particles[i].position/SIM_SCALE;
 	}
-
-	/*for(int i=0; i < border_particles.size(); ++i)
-	{
-		coordinateVector[particles.size()+i] = border_particles[i].position/SIM_SCALE;
-	}*/
 
 	return coordinateVector;
 }
 
 std::vector<vec2> ParticleSystem::getParticleCoordinatesBorder()
 {
-	std::vector<vec2> coordinateVector(border_particles.size());
-	for(int i = 0; i < border_particles.size(); ++i)
+	std::vector<vec2> coordinateVector(particles.size());
+	for(int i = 0; i < particles.size(); ++i)
 	{
-		coordinateVector[i] = border_particles[i].position/SIM_SCALE;
+		if(particles[i].is_static == true)
+			coordinateVector[i] = particles[i].position/SIM_SCALE;
 	}
 
 	return coordinateVector;

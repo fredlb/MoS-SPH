@@ -34,6 +34,7 @@ const float kViewScale =  2.0f;
 GLuint programID = 0;
 GLuint gradientProgramID = 0;
 std::vector<vec2> pointsToDraw;
+std::vector<vec2> bordersToDraw;
 int current_time;
 bool POINTS_MODE = true;
 int POINTS_RELOAD = true;
@@ -144,6 +145,11 @@ void render()
 	}
 
 	pointsToDraw = simulation->getParticleCoordinates();
+	bordersToDraw = simulation->getParticleCoordinatesBorder();
+
+	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
 	if(POINTS_MODE)
 	{
 		drawPoints(pointsToDraw, 0.2, 0.55, 0.75, 1.0, 1.0);
@@ -152,6 +158,8 @@ void render()
 	{
 		drawMetaballs(pointsToDraw);
 	}
+
+	drawPoints(bordersToDraw, 0.8, 0.3, 0.3, 1.0, 2.0);
 
 	/*
 	pointsToDraw = simulation->getParticleCoordinatesBorder();
@@ -184,8 +192,6 @@ void update()
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size)
 {
 
-	glClearColor(1.0, 1.0, 1.0, 1.0);
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	glUseProgram (programID);
 	GLint loc = glGetUniformLocation(programID, "uColor");
     glUniform4f(loc, r, g, b, a);
