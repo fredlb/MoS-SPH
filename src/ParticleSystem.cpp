@@ -208,24 +208,33 @@ void ParticleSystem::reloadParticleSystem(char c)
 std::vector<vec2> ParticleSystem::getParticleCoordinates()
 {
 	std::vector<vec2> coordinateVector(particles.size());
+	int j=0;
 	for(int i = 0; i < particles.size(); ++i)
 	{
 		if(particles[i].is_static == false)
-			coordinateVector[i] = particles[i].position/SIM_SCALE;
+		{
+			coordinateVector[j] = particles[i].position/SIM_SCALE;
+			j++;
+		}
 	}
+	coordinateVector.resize(j);
 
 	return coordinateVector;
 }
 
 std::vector<vec2> ParticleSystem::getParticleCoordinatesBorder()
 {
-	std::vector<vec2> coordinateVector(particles.size());
+	std::vector<vec2> coordinateVector(borderParticleCount);
+	int j=0;
 	for(int i = 0; i < particles.size(); ++i)
 	{
 		if(particles[i].is_static == true)
-			coordinateVector[i] = particles[i].position/SIM_SCALE;
+		{
+			coordinateVector[j] = particles[i].position/SIM_SCALE;
+			j++;
+		}
 	}
-
+	coordinateVector.resize(j);
 	return coordinateVector;
 }
 
