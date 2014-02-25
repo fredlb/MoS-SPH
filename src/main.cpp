@@ -23,6 +23,8 @@ void update();
 void glInit();
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
+void mouse2(int button, int state, int x, int y);
+void motion2(int x, int y);
 void keyPressed(unsigned char c, int x, int y);
 
 unsigned int vao;
@@ -41,7 +43,7 @@ std::vector<vec2> bordersToDraw;
 int current_time;
 bool POINTS_MODE = true;
 int POINTS_RELOAD = true;
-char keyPress;
+char keyPress = ' ';
 
 bool lbuttonDown = false;
 bool rbuttonDown = false;
@@ -59,6 +61,9 @@ int main (int argc, char** argv) {
 	glutCreateWindow("SEC");
 	glutPositionWindow(1000,100);
 	glutDisplayFunc(render2win);
+	//glutKeyboardFunc(keyPressed2);
+	//glutMouseFunc(mouse2);
+	//glutMotionFunc(motion2);
 
 	current_time = glutGet(GLUT_ELAPSED_TIME);
 	simulation = new ParticleSystem();
@@ -107,7 +112,11 @@ void render2win(){
 	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 	//drawPoints(bordersToDraw, 0.8, 0.3, 0.3, 1.0, 2.0);
 	//glUseProgram (programID);
-	GLint loc = glGetUniformLocation(programID, "uColor");
+	//GLint loc = glGetUniformLocation(programID, "uColor");
+
+	if(keyPress == 'k'){
+		simulation->setStiffness(1000.0);
+	}
 	
 	glutSwapBuffers();
 }
@@ -288,6 +297,8 @@ void motion(int x, int y)
 
 void keyPressed(unsigned char c, int x, int y)
 {
+	
+
 	if(c == 'p')
 	{
 		if(POINTS_MODE)

@@ -5,6 +5,8 @@
 class ParticleSystem
 {
 public:
+	float STIFFNESS;//
+	void setStiffness(float s);
 	ParticleSystem(void);
 	~ParticleSystem(void);
 
