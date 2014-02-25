@@ -34,8 +34,8 @@
 #define EPSILON	0.0000001f			//for collision detection
 
 
-#define STIFFNESS 12.0 //
-#define VISCOSITY 3.5 // pascal-seconds
+float STIFFNESS = 12.0;//
+float VISCOSITY = 3.5; // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
@@ -46,9 +46,9 @@
 
 float PARTICLE_MASS = 0.0f;// 0.000159963f;
 
-const float W_DEFAULT = 315.0f / (64.0f * 3.141592 * pow( INTERACTION_RADIUS, 9) );
-const float	W_GRAD_PRESSURE = -45.0f / (3.141592 * pow( INTERACTION_RADIUS, 6) );
-const float W_LAPLACIAN_VISCOSITY = 45.0f / (3.141592 * pow( INTERACTION_RADIUS, 6) );
+const float W_DEFAULT = 315.0f / (64.0f * PI * pow( INTERACTION_RADIUS, 9.0f) );
+const float	W_GRAD_PRESSURE = -45.0f / (PI * pow( INTERACTION_RADIUS, 6.0f) );
+const float W_LAPLACIAN_VISCOSITY = 45.0f / (PI * pow( INTERACTION_RADIUS, 6.0f) );
 
 ParticleSystem::ParticleSystem(void)
 {
@@ -303,7 +303,6 @@ void ParticleSystem::createBorderParticles()
 	}
 }
 
-
 void ParticleSystem::updateGrid()
 {
 	memset(&grid[0], 0, grid.size()*sizeof(grid[0]));
@@ -514,7 +513,6 @@ void ParticleSystem::calculateSPHForce()
 
 void ParticleSystem::moveParticles()
 {
-
 	float speed,diff,adj;
 
 	float current, u, v, cp, n,d;
@@ -774,10 +772,10 @@ void ParticleSystem::EmitParticles()
 
 void ParticleSystem::updateMouseState(float x, float y, bool lpressed, bool rpressed)
 {
-		mouseX = x*(BORDER_RIGHT-BORDER_LEFT)-BORDER_RIGHT;
-		mouseY = BORDER_TOP-y*(BORDER_TOP - BORDER_BOTTOM);
-		lButtonPressed = lpressed;
-		rButtonPressed=rpressed;
+	mouseX = x*(BORDER_RIGHT-BORDER_LEFT)-BORDER_RIGHT;
+	mouseY = BORDER_TOP-y*(BORDER_TOP - BORDER_BOTTOM);
+	lButtonPressed = lpressed;
+	rButtonPressed = rpressed;
 }
 
 void ParticleSystem::setBorderParticles(){

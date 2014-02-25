@@ -18,8 +18,11 @@
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size);
 void drawMetaballs(std::vector<vec2> points);
 void render();
+void render2win();
 void update();
 void glInit();
+void mouse(int button, int state, int x, int y);
+void motion(int x, int y);
 void keyPressed(unsigned char c, int x, int y);
 
 unsigned int vao;
@@ -44,51 +47,24 @@ bool lbuttonDown = false;
 bool rbuttonDown = false;
 int mouseX;
 int mouseY;
-void mouse(int button, int state, int x, int y)
-{
-	mouseX = x;
-	mouseY = y;
-	if(button == GLUT_RIGHT_BUTTON)
-	{
-		if(state == GLUT_DOWN)
-		{
-			//std::cout <<"Right button pressed at (" <<x <<","<<y << std::endl;
-			rbuttonDown = true;
-		}else{
-			rbuttonDown = false;
-		}
 
-	}
-	else if(button == GLUT_LEFT_BUTTON)
-	{
-		if(state == GLUT_DOWN)
-		{
-			//std::cout <<"Left button pressed at (" <<x <<","<<y << ")"<< std::endl;
-			lbuttonDown = true;
-		}else{
-			lbuttonDown = false;
-		}
-	}
-}
 
-void motion(int x, int y)
-{
-	mouseX = x;
-	mouseY = y;
-	if (lbuttonDown){}
-		//std::cout << "Mouse dragged with left button at "
-		//<< "(" << x << "," << y << ")" << std::endl;
-			if(rbuttonDown){}
-		//std::cout << "Mouse dragged with right button at "
-		//<< "(" << x << "," << y << ")" << std::endl;
-}
 
 int main (int argc, char** argv) {
+
+	glutInit(&argc, argv);
+
+	//controller window
+	glutInitWindowSize(150, 300);
+	glutCreateWindow("SEC");
+	glutPositionWindow(1000,100);
+	glutDisplayFunc(render2win);
+
 	current_time = glutGet(GLUT_ELAPSED_TIME);
 	simulation = new ParticleSystem();
 	//for(int i=0; i<1; i++) simulation->advance();
 	glutInitWindowSize(kWindowWidth, kWindowHeight);
-	glutInit(&argc, argv);
+	
 	glutInitDisplayString("samples stencil>=3 rgb double depth");
 	glutCreateWindow("SPH");
 	glutDisplayFunc(render);
@@ -105,8 +81,6 @@ int main (int argc, char** argv) {
 	const GLubyte* version = glGetString (GL_VERSION); // version as a string
 	printf ("Renderer: %s\n", renderer);
 	printf ("OpenGL version supported %s\n", version);
-
-
 
 	glInit();
 
@@ -127,6 +101,16 @@ void glInit()
 	metaballprocess = new Postprocess(kWindowWidth, kWindowHeight, "src/metaballs.frag");
 }
 
+void render2win(){
+
+	//glClearColor(1.0, 1.0, 1.0, 1.0);
+	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	//drawPoints(bordersToDraw, 0.8, 0.3, 0.3, 1.0, 2.0);
+	//glUseProgram (programID);
+	GLint loc = glGetUniformLocation(programID, "uColor");
+	
+	glutSwapBuffers();
+}
 
 void render()
 {
@@ -261,6 +245,45 @@ void drawMetaballs(std::vector<vec2> points)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	//draw to screen
 	metaballprocess->renderFrom();
+}
+
+void mouse(int button, int state, int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if(button == GLUT_RIGHT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			std::cout <<"Right button pressed at (" <<x <<","<<y << std::endl;
+			rbuttonDown = true;
+		}else{
+			rbuttonDown = false;
+		}
+
+	}
+	else if(button == GLUT_LEFT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			std::cout <<"Left button pressed at (" <<x <<","<<y << ")"<< std::endl;
+			lbuttonDown = true;
+		}else{
+			lbuttonDown = false;
+		}
+	}
+}
+
+void motion(int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if (lbuttonDown){}
+		//std::cout << "Mouse dragged with left button at "
+		//<< "(" << x << "," << y << ")" << std::endl;
+			if(rbuttonDown){}
+		//std::cout << "Mouse dragged with right button at "
+		//<< "(" << x << "," << y << ")" << std::endl;
 }
 
 void keyPressed(unsigned char c, int x, int y)
