@@ -55,6 +55,8 @@ void valueControllerMouse(int button, int state, int x, int y);
 void valueControllerMotion(int x, int y);
 int stiffnessValueChanger = 150;
 bool valueChanged = false;
+void drawGLString(GLfloat x, GLfloat y, char *textString);
+
 
 
 
@@ -63,7 +65,7 @@ int main (int argc, char** argv) {
 	glutInit(&argc, argv);
 
 	//controller window
-	glutInitWindowSize(150, 300);
+	glutInitWindowSize(500, 300);
 	glutCreateWindow("Value controll window");
 	glutPositionWindow(1000,100);
 	valueControllerInit();
@@ -115,7 +117,7 @@ void render2win(){
 
 	glClear(GL_COLOR_BUFFER_BIT);  
     
-    //glPointSize(60.0);  
+	drawGLString(70.0, 480.0, "Stiffness 0...50");
 
     glBegin(GL_LINES);
 	//glColor3f(1.0,1.0,0.0); 
@@ -480,15 +482,14 @@ void valueControllerInit(){
 
 	glOrtho(0, 500, 0, 500, 1, -1);
 
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
 }
 
 void valueControllerMouse(int button, int state, int x, int y)
 {
-	
-	if(button == GLUT_LEFT_BUTTON && (  x==42||x==43||x==44||x==45||x==46  )){
-		std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
+	if(button == GLUT_LEFT_BUTTON && (  x==147||x==148||x==149||x==150||x==151  )){
+		//std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
 
 		stiffnessValueChanger = (y-300)*-1;
 		valueChanged = true;
@@ -497,3 +498,17 @@ void valueControllerMouse(int button, int state, int x, int y)
 	
 }
 
+void drawGLString(GLfloat x, GLfloat y, char *textString)
+{
+    int le;
+    int qs;
+    
+    
+    glRasterPos2f(x, y);
+    le = (int) strlen(textString);
+    for (qs = 0; qs < le; qs++) 
+    {
+        glutBitmapCharacter(GLUT_BITMAP_8_BY_13, textString[qs]);
+        
+    }
+}
