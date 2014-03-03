@@ -54,9 +54,10 @@ void valueControllerInit();
 void valueControllerMouse(int button, int state, int x, int y);
 void valueControllerMotion(int x, int y);
 int stiffnessValueChanger = 150;
-bool valueChanged = false;
+bool stiffnessValueChanged = false;
 void drawGLString(GLfloat x, GLfloat y, char *textString);
-
+int viscosityValueChanger = 150;
+bool viscosityValueChanged = false;
 
 
 
@@ -116,24 +117,55 @@ void glInit()
 void render2win(){
 
 	glClear(GL_COLOR_BUFFER_BIT);  
-    
-	drawGLString(70.0, 480.0, "Stiffness 0...50");
+
+	//STIFFNESS CONTROLLER
+    int currentStiffness = stiffnessValueChanger*0.167;
+	char buffer[5];
+	sprintf(buffer,"%d", currentStiffness);
+	drawGLString(70.0, 480.0, "Stiffness");
+	drawGLString(154.0, 480.0, buffer);
 
     glBegin(GL_LINES);
 	//glColor3f(1.0,1.0,0.0); 
     glVertex2d(150, 480);
-	//glColor3f(1.0,0.0,0.0); 
     glVertex2d(150, 20);
     glEnd();
 
-	if(valueChanged){
-		simulation->setStiffness(stiffnessValueChanger*0.167);
+	if(stiffnessValueChanged){
+		simulation->setStiffness(currentStiffness);
+		stiffnessValueChanged=false;
 	}
 
 	glBegin(GL_LINES);
 	glVertex2d(130, stiffnessValueChanger*1.67);
 	glVertex2d(170, stiffnessValueChanger*1.67);
 	glEnd();
+	//END OF STIFFNESS CONTROLLER
+
+	//VISCOSITY CONTROLLER
+	int currentViscosity = viscosityValueChanger*0.033;
+	//buffer.clear();
+	sprintf(buffer,"%d", currentViscosity);
+	drawGLString(270.0, 480.0, "Viscosity");
+	drawGLString(354.0, 480.0, buffer);
+
+    glBegin(GL_LINES);
+	//glColor3f(1.0,1.0,0.0); 
+    glVertex2d(350, 480);
+    glVertex2d(350, 20);
+    glEnd();
+
+	if(viscosityValueChanged){
+		simulation->setViscosity(currentViscosity);
+		viscosityValueChanged=false;
+	}
+
+	glBegin(GL_LINES);
+	glVertex2d(330, viscosityValueChanger*1.67);
+	glVertex2d(370, viscosityValueChanger*1.67);
+	glEnd();
+	//END OF VISCOSITY CONTROLLER
+
 
 	glFlush();
 }
@@ -488,14 +520,21 @@ void valueControllerInit(){
 
 void valueControllerMouse(int button, int state, int x, int y)
 {
+	//std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
+
 	if(button == GLUT_LEFT_BUTTON && (  x==147||x==148||x==149||x==150||x==151  )){
 		//std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
 
 		stiffnessValueChanger = (y-300)*-1;
-		valueChanged = true;
+		stiffnessValueChanged = true;
 	}
 
-	
+	if(button == GLUT_LEFT_BUTTON && (  x==347||x==348||x==349||x==350||x==351  )){
+		//std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
+
+		viscosityValueChanger = (y-300)*-1;
+		viscosityValueChanged = true;
+	}
 }
 
 void drawGLString(GLfloat x, GLfloat y, char *textString)

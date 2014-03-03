@@ -33,7 +33,7 @@
 
 #define EPSILON	0.0000001f			//for collision detection
 
-float VISCOSITY = 3.5; // pascal-seconds
+//float VISCOSITY = 3.5; // pascal-seconds
 //#define PARTICLE_MASS 0.00020543 //kg
 
 
@@ -51,6 +51,7 @@ const float W_LAPLACIAN_VISCOSITY = 45.0f / (PI * pow( INTERACTION_RADIUS, 6.0f)
 ParticleSystem::ParticleSystem(void)
 {
 	STIFFNESS = 1.0;
+	VISCOSITY = 3.5;
 	particles.resize(MAX_PARTICLES + MAX_BORDER_PARTICLES);
 	border_particles.resize(MAX_BORDER_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
@@ -828,4 +829,8 @@ void ParticleSystem::setBorderParticles(){
 
 void ParticleSystem::setStiffness(float s){
 	STIFFNESS = s;
+}
+
+void ParticleSystem::setViscosity(float v){
+	VISCOSITY = v;
 }

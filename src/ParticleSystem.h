@@ -7,6 +7,8 @@ class ParticleSystem
 public:
 	float STIFFNESS;//
 	void setStiffness(float s);
+	float VISCOSITY;
+	void setViscosity(float v);
 	ParticleSystem(void);
 	~ParticleSystem(void);
 
@@ -14,8 +16,8 @@ public:
 	std::vector<vec2> getParticleCoordinatesNeighbours();
 	std::vector<vec2> getParticleCoordinatesGrid();
 	std::vector<vec2> getParticleCoordinatesBorder();
-#define PRESSURE_UNDER 1.0
-#define PRESSURE_OVER -1.0
+	#define PRESSURE_UNDER 1.0
+	#define PRESSURE_OVER -1.0
 	std::vector<vec2> getParticleCoordinatesPressure(float dir, float limit);
 	void advance();
 	long int draw_counter;
@@ -69,8 +71,7 @@ private:
 
 	float Random01() { return (float)rand() / (float)(RAND_MAX-1); }
 	float Random(float a, float b) { return a + (b-a)*Random01(); }
- 
-	
+
 
 	long int advance_call;
 	int particleCount;
