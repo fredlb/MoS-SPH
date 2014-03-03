@@ -21,10 +21,11 @@ void render();
 void render2win();
 void update();
 void glInit();
+void valueControllerInit();
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
-void mouse2(int button, int state, int x, int y);
-void motion2(int x, int y);
+void valueControllerMouse(int button, int state, int x, int y);
+void valueControllerMotion(int x, int y);
 void keyPressed(unsigned char c, int x, int y);
 
 unsigned int vao;
@@ -58,11 +59,12 @@ int main (int argc, char** argv) {
 
 	//controller window
 	glutInitWindowSize(150, 300);
-	glutCreateWindow("SEC");
+	glutCreateWindow("Value controll window");
 	glutPositionWindow(1000,100);
+	valueControllerInit();
 	glutDisplayFunc(render2win);
-	//glutKeyboardFunc(keyPressed2);
-	//glutMouseFunc(mouse2);
+	//glutKeyboardFunc(valueControllerKeyboard);
+	glutMouseFunc(valueControllerMouse);
 	//glutMotionFunc(motion2);
 
 	current_time = glutGet(GLUT_ELAPSED_TIME);
@@ -108,17 +110,20 @@ void glInit()
 
 void render2win(){
 
-	//glClearColor(1.0, 1.0, 1.0, 1.0);
-	//glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	//drawPoints(bordersToDraw, 0.8, 0.3, 0.3, 1.0, 2.0);
-	//glUseProgram (programID);
-	//GLint loc = glGetUniformLocation(programID, "uColor");
+	//glClear(GL_COLOR_BUFFER_BIT);  
+    
+    //glPointSize(60.0);  
 
-	if(keyPress == 'k'){
-		simulation->setStiffness(1000.0);
-	}
-	
-	glutSwapBuffers();
+    glBegin(GL_LINES);
+	//glColor3f(1.0,1.0,0.0); 
+    glVertex2d(150, 450);
+	//glColor3f(1.0,0.0,0.0); 
+    glVertex2d(150, 20);
+    glEnd();
+	glFlush();
+
+	//Left button pressed at (44,29)
+	//Left button pressed at (43,286)
 }
 
 void render()
@@ -453,4 +458,58 @@ void keyPressed(unsigned char c, int x, int y)
 		keyPress = '0';
 	}
 	
+}
+
+void valueControllerInit(){
+	
+	glClearColor(0, 0, 0, 0);
+
+	glViewport(0, 0, 500, 500);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	glOrtho(0, 500, 0, 500, 1, -1);
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+}
+
+void valueControllerMouse(int button, int state, int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if(button == GLUT_RIGHT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			std::cout <<"Right button pressed at (" <<x <<","<<y << std::endl;
+			rbuttonDown = true;
+		}else{
+			rbuttonDown = false;
+		}
+
+	}
+	else if(button == GLUT_LEFT_BUTTON)
+	{
+		if(state == GLUT_DOWN)
+		{
+			std::cout <<"Left button pressed at (" <<x <<","<<y << ")"<< std::endl;
+			lbuttonDown = true;
+		}else{
+			lbuttonDown = false;
+		}
+	}
+}
+
+void valueControllerMotion(int x, int y)
+{
+	mouseX = x;
+	mouseY = y;
+	if (lbuttonDown){
+		std::cout << "Mouse dragged with left button at " << "(" << x << "," << y << ")" << std::endl;
+	}
+	if(rbuttonDown){
+		std::cout << "Mouse dragged with right button at " << "(" << x << "," << y << ")" << std::endl;
+	}
 }
