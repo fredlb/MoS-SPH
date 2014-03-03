@@ -18,14 +18,10 @@
 void drawPoints(std::vector<vec2> points, float r, float g, float b, float a, float size);
 void drawMetaballs(std::vector<vec2> points);
 void render();
-void render2win();
 void update();
 void glInit();
-void valueControllerInit();
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
-void valueControllerMouse(int button, int state, int x, int y);
-void valueControllerMotion(int x, int y);
 void keyPressed(unsigned char c, int x, int y);
 
 unsigned int vao;
@@ -51,7 +47,14 @@ bool rbuttonDown = false;
 int mouseX;
 int mouseY;
 
-int valueChanger = 0;
+
+//Controller Window
+void render2win();
+void valueControllerInit();
+void valueControllerMouse(int button, int state, int x, int y);
+void valueControllerMotion(int x, int y);
+int stiffnessValueChanger = 150;
+bool valueChanged = false;
 
 
 
@@ -65,9 +68,7 @@ int main (int argc, char** argv) {
 	glutPositionWindow(1000,100);
 	valueControllerInit();
 	glutDisplayFunc(render2win);
-	//glutKeyboardFunc(valueControllerKeyboard);
 	glutMouseFunc(valueControllerMouse);
-	//glutMotionFunc(motion2);
 
 	current_time = glutGet(GLUT_ELAPSED_TIME);
 	simulation = new ParticleSystem();
@@ -123,15 +124,16 @@ void render2win(){
     glVertex2d(150, 20);
     glEnd();
 
+	if(valueChanged){
+		simulation->setStiffness(stiffnessValueChanger*0.167);
+	}
+
 	glBegin(GL_LINES);
-	glVertex2d(130, valueChanger*1.67);
-	glVertex2d(170, valueChanger*1.67);
+	glVertex2d(130, stiffnessValueChanger*1.67);
+	glVertex2d(170, stiffnessValueChanger*1.67);
 	glEnd();
 
 	glFlush();
-
-	//Left button pressed at (44,29)
-	//Left button pressed at (43,286)
 }
 
 void render()
@@ -469,7 +471,6 @@ void keyPressed(unsigned char c, int x, int y)
 }
 
 void valueControllerInit(){
-	
 	glClearColor(0, 0, 0, 0);
 
 	glViewport(0, 0, 500, 500);
@@ -489,22 +490,10 @@ void valueControllerMouse(int button, int state, int x, int y)
 	if(button == GLUT_LEFT_BUTTON && (  x==42||x==43||x==44||x==45||x==46  )){
 		std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
 
-		std::cout << "Now we're talking." << std::endl;
-		valueChanger = (y-300)*-1;
+		stiffnessValueChanger = (y-300)*-1;
+		valueChanged = true;
 	}
 
 	
 }
 
-void valueControllerMotion(int x, int y)
-{
-	mouseX = x;
-	mouseY = y;
-
-	if (lbuttonDown){
-		//std::cout << "Mouse dragged with left button at " << "(" << x << "," << y << ")" << std::endl;
-	}
-	if(rbuttonDown){
-		//std::cout << "Mouse dragged with right button at " << "(" << x << "," << y << ")" << std::endl;
-	}
-}
