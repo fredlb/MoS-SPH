@@ -51,6 +51,8 @@ bool rbuttonDown = false;
 int mouseX;
 int mouseY;
 
+int valueChanger = 0;
+
 
 
 int main (int argc, char** argv) {
@@ -110,16 +112,22 @@ void glInit()
 
 void render2win(){
 
-	//glClear(GL_COLOR_BUFFER_BIT);  
+	glClear(GL_COLOR_BUFFER_BIT);  
     
     //glPointSize(60.0);  
 
     glBegin(GL_LINES);
 	//glColor3f(1.0,1.0,0.0); 
-    glVertex2d(150, 450);
+    glVertex2d(150, 480);
 	//glColor3f(1.0,0.0,0.0); 
     glVertex2d(150, 20);
     glEnd();
+
+	glBegin(GL_LINES);
+	glVertex2d(130, valueChanger*1.67);
+	glVertex2d(170, valueChanger*1.67);
+	glEnd();
+
 	glFlush();
 
 	//Left button pressed at (44,29)
@@ -477,39 +485,26 @@ void valueControllerInit(){
 
 void valueControllerMouse(int button, int state, int x, int y)
 {
-	mouseX = x;
-	mouseY = y;
-	if(button == GLUT_RIGHT_BUTTON)
-	{
-		if(state == GLUT_DOWN)
-		{
-			std::cout <<"Right button pressed at (" <<x <<","<<y << std::endl;
-			rbuttonDown = true;
-		}else{
-			rbuttonDown = false;
-		}
+	
+	if(button == GLUT_LEFT_BUTTON && (  x==42||x==43||x==44||x==45||x==46  )){
+		std::cout << "X: " << x << "      Y: " << (y-300)*-1 << std::endl;
 
+		std::cout << "Now we're talking." << std::endl;
+		valueChanger = (y-300)*-1;
 	}
-	else if(button == GLUT_LEFT_BUTTON)
-	{
-		if(state == GLUT_DOWN)
-		{
-			std::cout <<"Left button pressed at (" <<x <<","<<y << ")"<< std::endl;
-			lbuttonDown = true;
-		}else{
-			lbuttonDown = false;
-		}
-	}
+
+	
 }
 
 void valueControllerMotion(int x, int y)
 {
 	mouseX = x;
 	mouseY = y;
+
 	if (lbuttonDown){
-		std::cout << "Mouse dragged with left button at " << "(" << x << "," << y << ")" << std::endl;
+		//std::cout << "Mouse dragged with left button at " << "(" << x << "," << y << ")" << std::endl;
 	}
 	if(rbuttonDown){
-		std::cout << "Mouse dragged with right button at " << "(" << x << "," << y << ")" << std::endl;
+		//std::cout << "Mouse dragged with right button at " << "(" << x << "," << y << ")" << std::endl;
 	}
 }
