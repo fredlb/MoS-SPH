@@ -55,6 +55,7 @@ ParticleSystem::ParticleSystem(void)
 	particles.resize(MAX_PARTICLES + MAX_BORDER_PARTICLES);
 	border_particles.resize(MAX_BORDER_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
+	particleCount = 0;
 	borderParticleCount = 0;
 	createParticleField();
 	//createBorderParticles();
@@ -63,7 +64,6 @@ ParticleSystem::ParticleSystem(void)
 	std::cout << "Particle mass: " << PARTICLE_MASS << std::endl;
 	advance_call = 0;
 	draw_counter = 0;
-	particleCount = 0;
 	emitStep = 0;
 	borderStep = 0;
 }
