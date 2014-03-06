@@ -704,7 +704,7 @@ void ParticleSystem::EmitParticles()
 				particles[totParticleCount+i].velocity.x = 50*particleAddCount*stepLength*Random(0.9,1.1);
 				particles[totParticleCount+i].velocity.y = 50*particleAddCount*(stepLength/2)*Random(0.9,1.1);
 			}
-			totParticleCount += particleAddCount;
+			particleCount += particleAddCount;
 		}
 	}
 	if(keyPressed == '6')
