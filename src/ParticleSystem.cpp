@@ -338,25 +338,6 @@ void ParticleSystem::updateNeighbours()
 		pi.neighbour_count = 0;
 		size_t gi = pi.grid_x;
 		size_t gj = pi.grid_y*GRID_WIDTH;
-
-		
-
-		/*for(int j=0; j<border_particles.size(); j++)
-		{
-			particle& pj = border_particles[j];
-			vec2 distance_vector = (pi.position - pj.position);
-			float distance2 = dot(distance_vector,distance_vector);
-			if(distance2 < INTERACTION_RADIUS2)
-			{
-				if(pi.neighbour_count < MAX_NEIGHBOURS)
-				{
-					pi.neighbours[pi.neighbour_count] = &pj;
-					pi.neighbour_distance[pi.neighbour_count] = sqrt(distance2);
-					++pi.neighbour_count;
-					//std::cout << "I'm on the border" << std::endl;
-				}
-			}
-		}*/
 		
 		//loop over adjacent cells
 		#pragma omp parallel for
@@ -595,50 +576,6 @@ void ParticleSystem::moveParticles()
 		pi.velocity = velocity_next;
 		velocity_next *= TIME_STEP;
 		pi.position += velocity_next;
-
-
-		/*if(pi.position.y < BORDER_BOTTOM)
-		{
-			current = pi.position.y;
-			u = pi.velocity.x;
-			v = pi.velocity.y;
-			cp = BORDER_BOTTOM;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-			pi.position.y = cp + d*n;
-			pi.velocity_eval.y = 0.0f; //v - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(v*n)*n;
-			pi.velocity_eval.x = u;
-		}
-
-		if(pi.position.x < BORDER_LEFT)
-		{
-			current = pi.position.x;
-			u = pi.velocity.x;
-			v = pi.velocity.y;
-			cp = BORDER_LEFT;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-			pi.position.x = cp + d*n;
-			pi.velocity_eval.x = 0.0f; //u - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
-			pi.velocity_eval.y = v;
-		}
-
-		if(pi.position.x > BORDER_RIGHT)
-		{
-			current = pi.position.x;
-			u = pi.velocity.x;
-			v = pi.velocity.y;
-			cp = BORDER_RIGHT;
-
-			d = sqrt((cp-current)*(cp-current));
-			n = 1;
-			pi.position.x = cp - d*n;
-			pi.velocity_eval.x = 0.0f; //u - (1 + EXT_DAMP*(d/(TIME_STEP*sqrt(u*u+v*v))))*(u*n)*n;
-			pi.velocity_eval.y = v;
-		}*/
-
 	}
 
 }
@@ -760,7 +697,7 @@ void ParticleSystem::EmitParticles()
 				particles[totParticleCount+i].position.x = mouseX+Random(-0.04,0.04);
 				particles[totParticleCount+i].position.y = mouseY+Random(-0.04,0.04);
 				/*particles[particleCount+i].velocity.x = 50*particleAddCount*stepLength*Random(0.9,1.1);*/
-				particles[totParticleCount+i].velocity.y = -0.5;//50*particleAddCount*(stepLength/2)*Random(0.9,1.1);
+				particles[totParticleCount+i].velocity.y = -0.5;
 				
 			
 			}

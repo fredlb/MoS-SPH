@@ -203,20 +203,6 @@ void render()
 
 	drawPoints(bordersToDraw, 0.8, 0.3, 0.3, 1.0, 2.0);
 
-	/*
-	pointsToDraw = simulation->getParticleCoordinatesBorder();
-	if(POINTS_MODE)
-	{
-		drawPoints(pointsToDraw, 0.0, 0.55, 0.75, 1.0, 1.0);
-	}
-	else
-	{
-		drawMetaballs(pointsToDraw);
-	}*/
-	
-	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_UNDER,150.0), 1.0, 0.0, 0.0, 0.5, 5.0);
-	//drawPoints(simulation->getParticleCoordinatesPressure(PRESSURE_OVER,150.0), 0.0, 1.0, 0.0, 0.5, 5.0);
-
 	//stop drawing here
 	glutSwapBuffers();
 }
