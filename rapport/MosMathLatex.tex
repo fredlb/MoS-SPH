@@ -1,0 +1,79 @@
+\documentclass[a4paper,12pt,oneside,final]{extarticle}
+\usepackage{mathtools}
+
+\begin{document}
+
+\section{Navier-Stockes}
+\begin{equation}
+\rho(\frac{\partial \vec{u}}{\partial t} + \vec{u} \cdot \nabla \vec{u}) =  -\nabla {\it p} + \nu \Delta \vec{u}
+\end{equation}
+
+\begin{equation}
+\nabla \cdot \vec{u} = 0
+\end{equation}
+
+
+\section{Krafter}
+\subsection{Mass-Densitet}
+
+\begin{equation}
+\rho^{}_{i} = \sum\limit_{j} {\it m_j W_{def} (r_i-r_j,h)}
+\end{equation}
+
+\begin{equation}
+{\it W_{def} = \frac{315}{64 \pi h^9}(h^2-r^2)^3}
+\end{equation}
+
+\subsection{Tryck}
+Ideal gas law
+\begin{equation}
+{\it pV = nRT}
+\end{equation}
+Tryck tärm
+\begin{equation}
+{\it p = k(\rho - \rho^{}_{0})}
+\end{equation}
+Tryck kraft
+\begin{equation}
+f^{tryck}_i = - \sum \limit^{}_{j \neq i} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} \nabla {\it W_{tryck} (r_i - r_j,h)}
+\end{equation}
+
+\begin{equation}
+{\it W_{tryck} = -\frac{45}{\pi h^6}\frac{(h-r)^2}{r}} \vec{r}
+\end{equation}
+
+\subsection{Viskositet}
+\begin{equation}
+f^{viskositet}_i = \mu \sum \limit^{}_{j} {\it \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} (u_j - u_i) \nabla^{2}_{} W_{viskositet} (r_i - r_j,h)}
+\end{equation}
+
+\begin{equation}
+{\it W_{viskoitet} = \frac{45}{\pi h^6} {(h-r)}}
+\end{equation}
+
+\subsection{Gravitation}
+\begin{equation}
+f^{gravitation}_{i} = \rho^{}_{i}g
+\end{equation}
+
+\section{Leap-frog}
+\begin{equation}
+{\it u_{t + \frac{1}{2} \Delta t} = u_{t - \frac{1}{2} \Delta t} + \Delta t a_t}
+\end{equation}
+\begin{equation}
+{\it r_{t+ \Delta t} = r_t + \Delta t u_{t + \frac{1}{2} \Delta t }}
+\end{equation}
+
+Initial velocity
+\begin{equation}
+{\it u_{- \frac{1}{2} \Delta t} = u_{0} + \frac{1}{2} \Delta t a_0}
+\end{equation}
+
+Approx
+\begin{equation}
+{\it u_t \approx \frac{u_{t - \frac{1}{2} \Delta t} + u_{t + \frac{1}{2} \Delta t} }{2} }
+\end{equation}
+
+
+
+\end{document}
