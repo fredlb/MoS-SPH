@@ -98,9 +98,9 @@ Det Lagrangiska tillvägagångsättet att simulera fluider är vanligt och relat
 
 “Smoothed Particle Hydrodynamics” (SPH)\cite{sph} är en Lagrangisk metod för att simulera fluider.
 Den togs fram på 70-talet i syfte att lösa astrofysiska problem.
-SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämningslängd” (även kallat interaktionsradie) jämnar ut partikelns egenskaper med hjälp av olka filterkärnor.
+SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämningslängd” (även kallat interaktionsradie) jämnar ut en partikels egenskaper med hjälp av olka filterkärnor.
 Vilken filterkärna som används beror på vilken egenskap som ska jämnas ut.
-När en fluid representeras av en uppsättning partiklar så är mass-konserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
+När en fluid representeras av en uppsättning partiklar är mass-konserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
 Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper inom partikelns interaktionsradie.
 \begin{figure}[H]
   \centering
@@ -123,11 +123,11 @@ Resultatet blir mass-densiteten kring partikeln.
 \subsection{Krafter}
 \subsubsection{Tryck}
 Trycket är den första delen av högerledet i Navier Stokes ekvation.
-Trycket kan bestämmas med den idella gas lagen:
+Trycket kan bestämmas med den idella gaslagen:
 \begin{equation}
 {\it pV = nRT}
 \end{equation}
-där V är volymen per en enhets massa, n är antalet partiklar i mol, R är den universiella gas konstanten och T är temperaturen.
+där V är volymen per enhetsmassa, n är antalet partiklar i mol, R är den allmänna gaskonstanten och T är temperaturen.
 Högerledet är konstant för simuleringar denna rapport avser och kan därför sättas till en styvhets konstant k. 
 För att få attraherande krafter måste ta hänsyn till vilodensiteten. Uttrycket för trycket blir då:
 
