@@ -13,7 +13,7 @@
 } 
 
 \usepackage{mathtools}
-
+\usepackage{subcaption}
 \usepackage{fancyhdr}
 \usepackage{float}
 \usepackage{titling}
@@ -289,19 +289,19 @@ I några fall släpptes vätskan ifrån en höjd för att studera hur komprimera
 Det testades också att distribuera ut vätskan över tid, ungefär som en vattenspridare.
 
 \begin{figure}[H]
-  \centering
-    \setlength\fboxsep{0pt}
-    \setlength\fboxrule{0.5pt}
-    \fbox{\includegraphics[width=0.5\textwidth]{bilder/dam_break}}
-  \caption{Partiklar som får en acceleration från vägg.}
-\end{figure}
+\centering
+  \begin{subfigure}[b]{.5\textwidth}
+      \setlength\fboxsep{0pt}
+      \setlength\fboxrule{0.5pt}
+      \fbox{\includegraphics[width=0.5\textwidth]{bilder/dam_break}}
+  \end{subfigure}
 
-\begin{figure}[H]
-  \centering
-    \setlength\fboxsep{0pt}
-    \setlength\fboxrule{0.5pt}
-    \fbox{\includegraphics[width=0.5\textwidth]{bilder/koolwave}}
-  \caption{Partiklar som får en acceleration från vägg.}
+  \begin{subfigure}[b]{.5\textwidth}
+      \setlength\fboxsep{0pt}
+      \setlength\fboxrule{0.5pt}
+      \fbox{\includegraphics[width=0.5\textwidth]{bilder/koolWave}}
+  \end{subfigure}
+
 \end{figure}
 
 \begin{figure}[H]
