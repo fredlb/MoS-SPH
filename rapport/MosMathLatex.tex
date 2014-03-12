@@ -20,7 +20,7 @@
 \pagestyle{fancy}
 
 
-\author{Fredrik Lindner, Sebastian Piwell, Aron Tornberg, Nicklas Fransson}
+\author{Fredrik Lindner, Sebastian Piwell, Aron Tornberg, Niklas Fransson}
 \title{Fluidsimulering i 2D, TNM085}
 
 
@@ -56,7 +56,7 @@ Eventuella förenklingar av fysiken kommer att göras för att uppnå snabbhet o
 Rörelse i en fluid kan förklaras med Navier-Stokes ekvationer.
 En fluid kan vara gas, vätska eller plasma.
 Dessa ekvationer är baserade på Newtons andra lag och bevarar momentum, massa och är inkompressibel.
-Ekvationen ger ett flödes fält som bestämmer hastigheten för en given punkt i tid och rum i fluiden.
+Ekvationen ger ett flödesfält som bestämmer hastigheten för en given punkt i tid och rum i fluiden.
 
 
 
@@ -80,21 +80,21 @@ Ekvationen ger ett flödes fält som bestämmer hastigheten för en given punkt 
 \end{multlined}
 \end{aligned}
 \end{equation*}
-Vänsterledet är produkten av mass-densiteter och accelerations-densiteter.
-Högerledet är summan av kraft densiteterna.
-I högerledet kan ekvationen utvecklas med externa krafter som gravitation och ytspänning.
-Ekvationen under förklarar bevarandet av massan för en inkompressibel fluid.
+Vänsterledet är produkten av mass- och accelerations-densiteter.
+Högerledet är summan av kraft-densiteterna.
+I högerledet kan ekvationen utvecklas med externa krafter som gravitation och ytspänning (1).
+Bevarandet av massan för en inkompressibel fluid beskrivs vidare (2).
 
 I nästan alla fall är dessa ekvationer icke-linjära.
 Det finns ännu inte något bevis att det alltid finns lösningar till dessa ekvationer i tre dimensioner.
 Navier-Stokes ekvationer har varit och är fortfarande ett komplext matematiskt problem.
 
 \section{Simulering}
-Det finns två primära sätt att praktiskt simulera en fluid, Euleriskt och Lagraginskt(lol).
+Det finns två primära sätt att praktiskt simulera en fluid, Eulers- och Lagranges modell.
 Den euleriska metoden går ut på att man har en fixed volym där man på bestämda positioner (celler) räknar ut fluidens egenskaper så som densitet, hastighet, tryck osv.
 I den lagrangiska metoden behandlar man istället fluiden som en uppsättning partiklar som skulle kunna representera en molekyl av fluiden.
-Varje partikel har egenskaper som hastighet, acceleration, position men även tryck och densitet.
-Det Lagrangiska sättet att simulera fluider är vanligt och relativt enkelt att implementera.
+Varje partikel har egenskaper som hastighet, acceleration och position men även tryck och densitet.
+Det Lagrangiska tillvägagångsättet att simulera fluider är vanligt och relativt enkelt att implementera.
 
 “Smoothed Particle Hydrodynamics” (SPH)\cite{sph} är en Lagrangisk metod för att simulera fluider.
 Den togs fram på 70-talet i syfte att lösa astrofysiska problem.
