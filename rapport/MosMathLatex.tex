@@ -15,7 +15,7 @@
 \usepackage{mathtools}
 
 \usepackage{fancyhdr}
-
+\usepackage{float}
 \usepackage{titling}
 \pagestyle{fancy}
 
@@ -102,6 +102,11 @@ SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämn
 Vilken filterkärna som används beror på vilken egenskap som ska jämnas ut.
 När en fluid representeras av en uppsättning partiklar så är mass-konserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
 Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper inom partikelns interaktionsradie.
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.5\textwidth]{bilder/partiklar_vila}
+  \caption{En vätska representerad av partiklar med interaktionsradie.}
+\end{figure}
 
 \subsection{Mass-Densitet}
 Massan för en partikel bestäms innan simuleringen och ses som en konstant.
@@ -138,12 +143,21 @@ Viktningskärnan som används för denna summering är tillskillnad från mass-d
 För att få en jämnare kraftfördelning som mer följer Newtons 3de lag används följande summering.
 
 \begin{equation} \label{eq:f_tryck}
-f^{tryck}_i = - \sum_{\lim^{}_{j \neq i}} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} \nabla {\it W_{tryck} (r_i - r_j,h)}
+f^{tryck}_i = - \sum_{j \neq i} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} \nabla {\it W_{tryck} (r_i - r_j,h)}
 \end{equation}
 
 \begin{equation} \label{eq:w_tryck}
 {\it W_{tryck} = -\frac{45}{\pi h^6}\frac{(h-r)^2}{r}} \vec{r}
 \end{equation}
+
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.5\textwidth]{bilder/partiklar_komprimering}
+  \caption{Partiklar som verkar på andra partiklar.}
+\end{figure}
+
+
 
 \subsubsection{Viskositet}
 Viskositeten är den andra delen av högerledet i Navier-Stokes ekvation (\ref{eq:navier-stokes-1}).
@@ -152,7 +166,7 @@ Den uppkommer ifrån friktionen mellan partiklarna och minskar den relativa hast
 Viskositetens storlek bestämms av en konstant som beror på vilken typ av fluid man ska simulera.
 Kraften som viskositeten påverkar partikeln med fås av uttrycket:
 \begin{equation}
-f^{viskositet}_i = \mu \sum \limit^{}_{j} {\it \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} (u_j - u_i) \nabla^{2}_{} W_{viskositet} (r_i - r_j,h)}
+f^{viskositet}_i = \mu \sum_{j} {\it \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} (u_j - u_i) \nabla^{2}_{} W_{viskositet} (r_i - r_j,h)}
 \end{equation}
 
 \begin{equation}
@@ -173,7 +187,13 @@ Där g är gravitationsaccelerationen som verkar i negativt y-led i simuleringen
 För att inte partiklarna ska försvinna utanför simuleringsrymden har enkla väggar vid kanterna skapats.
 Vid väggarna sker en kollisionshantering som aktiveras då partiklarna är tillräckligt nära.
 Kollisionsresponsen beror på styvheten på vätskan och infallsvinkeln.
-Den uppdaterar partikelns acceleration vilket simulerar en vägg. 
+Den uppdaterar partikelns acceleration vilket simulerar en vägg.
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.3\textwidth]{bilder/partiklar_vagg}
+  \caption{Partiklar som får en acceleration från vägg.}
+\end{figure}
+
 \subsubsection{Kollisionspartiklar}
 I simuleringen kan man lägga till kanter i form av kantpartiklar.
 Kantpartiklarna defineras som de andra partiklarna men med tyngre massa, därmed större mass-densitet och tryck.
@@ -183,6 +203,12 @@ I en offline simulering räcker denna definering av kanter.
 Men för en interaktiv simulering kan inte tidssteget vara tillräckligt litet för att det ska fungera bra.
 För enstaka partiklar eller partiklar med höga hastigheter hinner inte kantpartiklarna påverka de inkommande partiklarna.
 Partiklarnas hastighet förändras då inte och åker igenom kanten. 
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=0.3\textwidth]{bilder/partiklar_kolpart}
+  \caption{Partiklar som får en acceleration från vägg.}
+\end{figure}
 
 För att få bättre kanter i en realtids simulering behövs en omedelbar verkan på partikelns hastighet då de träffar kanten.
 Det fås genom att updatera partiklarnas hastighet på ett annat sätt då de är inom kantpartiklarnas interaktionsområde.
@@ -344,6 +370,8 @@ Det finns även andra metoder baserade på SPH som lyckas bibehålla en hög sty
 % \begin{equation}
 % {\it u_t \approx \frac{u_{t - \frac{1}{2} \Delta t} + u_{t + \frac{1}{2} \Delta t} }{2} }
 % \end{equation}
+
+\clearpage
 
 \begin{thebibliography}{9}
   

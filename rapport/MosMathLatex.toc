@@ -3,20 +3,20 @@
 \contentsline {section}{\numberline {2}Syfte}{3}
 \contentsline {section}{\numberline {3}Modell}{4}
 \contentsline {section}{\numberline {4}Simulering}{4}
-\contentsline {subsection}{\numberline {4.1}Mass-Densitet}{4}
+\contentsline {subsection}{\numberline {4.1}Mass-Densitet}{5}
 \contentsline {subsection}{\numberline {4.2}Krafter}{5}
 \contentsline {subsubsection}{\numberline {4.2.1}Tryck}{5}
-\contentsline {subsubsection}{\numberline {4.2.2}Viskositet}{5}
-\contentsline {subsubsection}{\numberline {4.2.3}Gravitation}{5}
+\contentsline {subsubsection}{\numberline {4.2.2}Viskositet}{6}
+\contentsline {subsubsection}{\numberline {4.2.3}Gravitation}{6}
 \contentsline {subsection}{\numberline {4.3}Kollisionshantering}{6}
 \contentsline {subsubsection}{\numberline {4.3.1}V\IeC {\"a}ggar}{6}
-\contentsline {subsubsection}{\numberline {4.3.2}Kollisionspartiklar}{6}
-\contentsline {subsection}{\numberline {4.4}Integrering}{6}
-\contentsline {section}{\numberline {5}Implementering}{7}
-\contentsline {section}{\numberline {6}Rendering}{7}
-\contentsline {section}{\numberline {7}Resultat}{8}
-\contentsline {section}{\numberline {8}Diskussion}{8}
-\contentsline {subsection}{\numberline {8.1}Begr\IeC {\"a}nsningar}{8}
-\contentsline {subsection}{\numberline {8.2}F\IeC {\"o}rb\IeC {\"a}ttringar}{8}
-\contentsline {subsubsection}{\numberline {8.2.1}GPGPU}{8}
-\contentsline {subsubsection}{\numberline {8.2.2}PCISPH}{8}
+\contentsline {subsubsection}{\numberline {4.3.2}Kollisionspartiklar}{7}
+\contentsline {subsection}{\numberline {4.4}Integrering}{7}
+\contentsline {section}{\numberline {5}Implementering}{9}
+\contentsline {section}{\numberline {6}Rendering}{9}
+\contentsline {section}{\numberline {7}Resultat}{10}
+\contentsline {section}{\numberline {8}Diskussion}{10}
+\contentsline {subsection}{\numberline {8.1}Begr\IeC {\"a}nsningar}{10}
+\contentsline {subsection}{\numberline {8.2}F\IeC {\"o}rb\IeC {\"a}ttringar}{10}
+\contentsline {subsubsection}{\numberline {8.2.1}GPGPU}{10}
+\contentsline {subsubsection}{\numberline {8.2.2}PCISPH}{10}
