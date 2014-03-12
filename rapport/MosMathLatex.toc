@@ -15,8 +15,8 @@
 \contentsline {section}{\numberline {5}Implementering}{9}
 \contentsline {section}{\numberline {6}Rendering}{9}
 \contentsline {section}{\numberline {7}Resultat}{10}
-\contentsline {section}{\numberline {8}Diskussion}{10}
-\contentsline {subsection}{\numberline {8.1}Begr\IeC {\"a}nsningar}{10}
-\contentsline {subsection}{\numberline {8.2}F\IeC {\"o}rb\IeC {\"a}ttringar}{10}
+\contentsline {section}{\numberline {8}Diskussion}{11}
+\contentsline {subsection}{\numberline {8.1}Begr\IeC {\"a}nsningar}{11}
+\contentsline {subsection}{\numberline {8.2}F\IeC {\"o}rb\IeC {\"a}ttringar}{11}
 \contentsline {subsubsection}{\numberline {8.2.1}GPGPU}{11}
 \contentsline {subsubsection}{\numberline {8.2.2}PCISPH}{11}

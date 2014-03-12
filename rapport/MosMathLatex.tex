@@ -207,7 +207,7 @@ Partiklarnas hastighet förändras då inte och åker igenom kanten.
 \begin{figure}[H]
   \centering
     \includegraphics[width=0.3\textwidth]{bilder/partiklar_kolpart}
-  \caption{Partiklar som får en acceleration från vägg.}
+  \caption{Kantpartiklar}
 \end{figure}
 
 För att få bättre kanter i en realtids simulering behövs en omedelbar verkan på partikelns hastighet då de träffar kanten.
@@ -290,27 +290,29 @@ Det testades också att distribuera ut vätskan över tid, ungefär som en vatte
 
 \begin{figure}[H]
 \centering
-  \begin{subfigure}[b]{.5\textwidth}
+  \begin{subfigure}[b]{.4\textwidth}
       \setlength\fboxsep{0pt}
       \setlength\fboxrule{0.5pt}
-      \fbox{\includegraphics[width=0.5\textwidth]{bilder/dam_break}}
+      \fbox{\includegraphics[width=\textwidth]{bilder/dam_break}}
   \end{subfigure}
-
-  \begin{subfigure}[b]{.5\textwidth}
+  ~
+  \begin{subfigure}[b]{.4\textwidth}
       \setlength\fboxsep{0pt}
       \setlength\fboxrule{0.5pt}
-      \fbox{\includegraphics[width=0.5\textwidth]{bilder/koolWave}}
+      \fbox{\includegraphics[width=\textwidth]{bilder/koolWave}}
   \end{subfigure}
-
+\caption{Ett vanligt testfall, \textit{dam break}, vid olika tidpunkter.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
     \setlength\fboxsep{0pt}
     \setlength\fboxrule{0.5pt}
-    \fbox{\includegraphics[width=0.5\textwidth]{bilder/emiters}}
-  \caption{Partiklar som får en acceleration från vägg.}
+    \fbox{\includegraphics[width=0.8\textwidth]{bilder/emiters}}
+  \caption{Exempel på partikelkälla och kantpartiklar.}
 \end{figure}
+
+\clearpage
 
 \section{Diskussion}
 \subsection{Begränsningar}
