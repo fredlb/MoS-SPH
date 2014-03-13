@@ -50,8 +50,8 @@ const float W_LAPLACIAN_VISCOSITY = 45.0f / (PI * pow( INTERACTION_RADIUS, 6.0f)
 
 ParticleSystem::ParticleSystem(void)
 {
-	STIFFNESS = 1.0;
-	VISCOSITY = 3.5;
+	STIFFNESS = 25.0;
+	VISCOSITY = 4.0;
 	particles.resize(MAX_PARTICLES + MAX_BORDER_PARTICLES);
 	border_particles.resize(MAX_BORDER_PARTICLES);
 	grid.resize(GRID_WIDTH*GRID_HEIGHT);
