@@ -123,13 +123,13 @@ Resultatet blir massdensiteten kring partikeln.
 \subsection{Krafter}
 \subsubsection{Tryck}
 Trycket är den första delen av högerledet i Navier Stokes ekvation.
-Trycket kan bestämmas med den ideala gaslagen:
-\begin{equation}
+Trycket kan bestämmas med den ideala gaslagen (\ref{eq:ideal_gas}).
+\begin{equation} \label{eq:ideal_gas}
 {\it pV = nRT}
 \end{equation}
-där V är volymen per enhetsmassa, n är antalet partiklar i mol, R är den allmänna gaskonstanten och T är temperaturen.
+V är volymen per enhetsmassa, n är antalet partiklar i mol, R är den allmänna gaskonstanten och T är temperaturen.
 Högerledet är konstant för simuleringar denna rapport avser och kan därför sättas till en styvhets konstant k. 
-För att få attraherande krafter måste ta hänsyn till vilodensiteten. Uttrycket för trycket blir då:
+För att få attraherande krafter måste det tas hänsyn till vilodensiteten. Uttrycket för trycket:
 
 \begin{equation}
 {\it p = k(\rho - \rho^{}_{0})}
@@ -140,7 +140,7 @@ För att få en inkompressibel fluid behöver styvhetskonstanten k vara så hög
 
 För att bestämma kraften från trycket summeras trycket hos partiklar inom interaktionsradien på liknande sätt som för mass-densiteten (\ref{eq:f_tryck}).
 Viktningskärnan som används för denna summering är till skillnad från massdensiteten nu mycket snävare och spetsig (\ref{eq:w_tryck}).
-För att få en jämnare kraftfördelning som mer följer Newtons tredje lag används följande summering.
+För att få en jämnare kraftfördelning som mer följer Newtons tredje lag används egenskaper från närliggande partiklar.
 
 \begin{equation} \label{eq:f_tryck}
 f^{tryck}_i = - \sum_{j \neq i} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} \nabla {\it W_{tryck} (r_i - r_j,h)}
@@ -185,7 +185,7 @@ Där g är gravitationsaccelerationen som verkar i negativt y-led i simuleringen
 \subsection{Kollisionshantering}
 \subsubsection{Väggar}
 För att inte partiklarna ska försvinna utanför simuleringsrymden har enkla väggar vid kanterna skapats.
-Vid väggarna sker en kollisionshantering som aktiveras då partiklarna är tillräckligt nära.
+Vid väggarna sker en kollisionshantering som aktiveras då väggen är inom partikelns radie.
 Kollisionsresponsen beror på styvheten på vätskan och infallsvinkeln.
 Den uppdaterar partikelns acceleration vilket simulerar en vägg.
 
@@ -216,7 +216,7 @@ Partiklarnas hastighet förändras då inte och åker igenom kanten.
 För att få bättre kanter i en realtids simulering behövs en omedelbar verkan på partikelns hastighet då de träffar kanten.
 Det fås genom att uppdatera partiklarnas hastighet på ett annat sätt då de är inom kantpartiklarnas interaktionsområde.
 Istället för Navier-Stokes ekvation för uppdatering av hastigheten används en enkel partikel mot partikel kollisionshantering.
-En reflektionsvinkel beräknas mellan partiklarna och hastigheten uppdateras i den riktningen.
+En reflektionsvinkel beräknas mellan partiklarna och hastigheten uppdateras i den riktningen med en viss dämpning.
 
 \subsection{Integrering}
 För uppdatering av position och hastighet har integreringsmetoden Leap-Frog används. Den fungerar genom att ta halva steg för positionen och hastigheten.
@@ -414,6 +414,10 @@ Vad som är effektivast är oklart och har ej undersökts.
   R.A. Gingold and J.J. Monaghan, \emph{Smoothed particle hydrodynamics: theory and application to non-spherical stars}, Mon. Not. R. Astron. Soc., Vol 181 1977
 \bibitem{kelager}
   Micky Kelager, \emph{Lagrangian Fluid Dynamics Using Smoothed Particle Hydrodynamics}, University of Copenhagen, 2006
+
+\bibitem{vesterlund}
+  Marcus Vesterlund, \emph{Simulation and Rendering of a Viscous Fluid using Smoothed Particle Hydrodynamics, 2004}
+  
 \bibitem{openmp}
   http://openmp.org/
 \bibitem{bodin}
