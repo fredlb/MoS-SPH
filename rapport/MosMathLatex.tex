@@ -101,7 +101,7 @@ Den togs fram på 70-talet i syfte att lösa astrofysiska problem.
 SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämningslängd” (även kallat interaktionsradie) jämnar ut en partikels egenskaper med hjälp av olika filterkärnor.
 Vilken filterkärna som används beror på vilken egenskap som ska jämnas ut.
 När en fluid representeras av en uppsättning partiklar är masskonserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
-Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper inom partikelns interaktionsradie.
+Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper inom partikelns interaktionsradie. Förenklingar i metoden SPH för vätskesimulering har gjorts för att uppnå projektets syfte~\cite{kelager}\cite{vesterlund}.
 \begin{figure}[H]
   \centering
     \includegraphics[width=0.5\textwidth]{bilder/partiklar_vila}
@@ -219,7 +219,7 @@ Istället för Navier-Stokes ekvation för uppdatering av hastigheten används e
 En reflektionsvinkel beräknas mellan partiklarna och hastigheten uppdateras i den riktningen med en viss dämpning.
 
 \subsection{Integrering}
-För uppdatering av position och hastighet har integreringsmetoden Leap-Frog används. Den fungerar genom att ta halva steg för positionen och hastigheten.
+För uppdatering av position och hastighet har integreringsmetoden Leap-Frog~\cite{kelager} används. Den fungerar genom att ta halva steg för positionen och hastigheten.
 Hastigheten börjar ett halvt steg bakåt.
 I och med det så “hoppar” positionen och hastigheten över varandra.
 Hastigheten för den aktuella tiden fås approximativt av halvstegen bakom och framför.
