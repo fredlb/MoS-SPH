@@ -188,10 +188,13 @@ För att inte partiklarna ska försvinna utanför simuleringsrymden har enkla v�
 Vid väggarna sker en kollisionshantering som aktiveras då partiklarna är tillräckligt nära.
 Kollisionsresponsen beror på styvheten på vätskan och infallsvinkeln.
 Den uppdaterar partikelns acceleration vilket simulerar en vägg.
-\begin{figure}[H]
+
+En fjäderliknande kraft i motsatt riktning från partikelns acceleration skapas baserat på hur långt partikeln har penetrerat väggen, se figur~\ref{fig:vagg_kraft}.
+Detta är för att simulera att partiklar med stor hastighet studsar hårdare mot en vägg i jämförelse med långsammare partiklar.
+\begin{figure}[H] 
   \centering
     \includegraphics[width=0.3\textwidth]{bilder/partiklar_vagg}
-  \caption{Partiklar som får en acceleration från vägg.}
+  \caption{Partiklar som får en acceleration från vägg.} \label{fig:vagg_kraft}
 \end{figure}
 
 \subsubsection{Kollisionspartiklar}
@@ -246,7 +249,7 @@ I steg ett delas simuleringen upp i ett rutnät med höjd och bredd lika med int
 Varje partikel i systemet koppas till den lista vars cell partikeln befinner sig i.
 
 I steg två kontrolleras vilka andra partiklar som befinner sig inom interaktionsradien till varje partikel och dessa placeras i en lista av grannar till partikeln i fråga.
-För att undvika kvadratisk tidskomplexitet i denna kontroll använder man det faktum att samtliga partiklar som är grannar till en specifika partikel antingen kommer befinna sig i samma cell som partikelen i fråga eller någon av de 8 omkringliggande cellerna och utför enbart kontrollen för listorna kopplade till dessa 9 celler samt så begränsas antalet grannar i listan till 64.
+För att undvika kvadratisk tidskomplexitet i denna kontroll användes faktumet att samtliga partiklar som är grannar till en specifika partikel antingen kommer befinna sig i samma cell som partikelen i fråga eller någon av de 8 omkringliggande cellerna och utför enbart kontrollen för listorna kopplade till dessa 9 celler samt så begränsas antalet grannar i listan till 64.
 
 I uträkningen av hydrodynamiken används sedan endast de partiklar som finns i listan av grannar för den aktuella partikeln.
 Vilket minskar tidskomplexiteten markant.
@@ -260,13 +263,13 @@ OpenMP \cite{openmp} har används för att räkna på flera partiklar samtidigt.
 \section{Rendering}
 För att rita simuleringen skickas en lista med koordinater för samtliga partiklar via OpenGL till grafikkortet.
 Två olika metoder för utritning finns i simuleringen.
-Dels ett punktläge där varje partikel helt enkelt ritas ut som en punkt och dels metaball-läget.
+Dels ett punktläge där varje partikel helt enkelt ritas ut som en punkt och dels metaballs-läget~\cite{blinn}.
 
-I metaball läget används metaballs för att rita ut partiklarna.
+I metaball-läget används metaballs för att rita ut partiklarna.
 Metaballs fungerar på så sätt att man för varje partikel definierar en radialt avtagande funktion.
 För varje punkt i simuleringsmiljön summerar man sedan dessa funktioner och kollar ifall summan är över ett tröskelvärde.
 Om den är över tröskelvärdet säger man att punkten är fylld och annars tom.
-På detta sätt kan man representera partiklar som bollar som har egenskapen att de ser ut att smälta ihop då de kommer nära varandra.
+På detta sätt kan partiklar representeras som bollar som har egenskapen att de ser ut att smälta ihop då de kommer nära varandra.
 Så kallade \textit{metaballs}.
 
 Implementationen av metaballs i denna simuleringen fungerar på så sätt att varje partikel ritas ut som en pointsprite vars textur definieras av en fragment-shader (gradientball.frag) som texturerar pointspriten som en radialt avtagande gradient enligt funktionen:
@@ -417,6 +420,9 @@ Vad som är effektivast är oklart och har ej undersökts.
    K. Bodin, C. Lacoursière, M. Servin, \emph{Constraint Fluids}, IEEE Transactions on Visualization and Computer Graphics, Jan 2011 
 \bibitem{solenthaler}
     B. Solenthaler, R. Pajarola, \emph{Predictive-corrective incompressible SPH}, University of Zurich, 2009
+\bibitem{blinn}
+    Blinn, J. F., \emph{A Generalization of Algebraic Surface Drawing}, ACM Transactions on Graphics 1 (3), 1982
+
 \end{thebibliography}
 
 
