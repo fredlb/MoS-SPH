@@ -20,3 +20,4 @@
 \contentsline {subsection}{\numberline {8.2}F\IeC {\"o}rb\IeC {\"a}ttringar}{11}
 \contentsline {subsubsection}{\numberline {8.2.1}GPGPU}{11}
 \contentsline {subsubsection}{\numberline {8.2.2}PCISPH}{11}
+\contentsline {subsubsection}{\numberline {8.2.3}Sortering av grannar}{11}

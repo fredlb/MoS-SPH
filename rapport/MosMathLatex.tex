@@ -43,7 +43,7 @@ Historiskt sett så har det alltid varit intressant att studera hur fluider rör
 När datorer började användas inom många industrier så kom möjligheten att sätta teorierna kring fluidsimulering i praktik.
 Idag används det inom stora industriprocesser och för rena visuella tillämpningar.
 Trots att datorer har gjort det möjligt att praktiskt simulera fluider så kvarstår det idag stora begränsningar på applicerbarheten.
-Därför krävs det många förenkligar för att simuleringarna skall vara ett praktiskt verktyg.
+Därför krävs det många förenklingar för att simuleringarna skall vara ett praktiskt verktyg.
 
 \section{Syfte}
 Projektets syfte är att skapa en 2-dimensionell vätskefluidsimulering i realtid för visualisering.
@@ -55,7 +55,7 @@ Eventuella förenklingar av fysiken kommer att göras för att uppnå snabbhet o
 \section{Modell}
 Rörelse i en fluid kan förklaras med Navier-Stokes ekvationer.
 En fluid kan vara gas, vätska eller plasma.
-Dessa ekvationer är baserade på Newtons andra lag och bevarar momentum, massa och är inkompressibel.
+Dessa ekvationer är baserade på Newtons andra lag och bevarar moment, massa och är inkompressibel.
 Ekvationen ger ett flödesfält som bestämmer hastigheten för en given punkt i tid och rum i fluiden.
 
 
@@ -80,7 +80,7 @@ Ekvationen ger ett flödesfält som bestämmer hastigheten för en given punkt i
 \end{multlined}
 \end{aligned}
 \end{equation*}
-Vänsterledet är produkten av mass- och accelerations-densiteter.
+Vänsterledet är produkten av mass- och accelerationsdensiteter.
 Högerledet är summan av kraft-densiteterna.
 I högerledet kan ekvationen utvecklas med externa krafter som gravitation och ytspänning (1).
 Bevarandet av massan för en inkompressibel fluid beskrivs vidare (2).
@@ -91,16 +91,16 @@ Navier-Stokes ekvationer har varit och är fortfarande ett komplext matematiskt 
 
 \section{Simulering}
 Det finns två primära sätt att praktiskt simulera en fluid, Eulers- och Lagranges modell.
-Den euleriska metoden går ut på att man har en fixed volym där man på bestämda positioner (celler) räknar ut fluidens egenskaper så som densitet, hastighet, tryck osv.
-I den lagrangiska metoden behandlar man istället fluiden som en uppsättning partiklar som skulle kunna representera en molekyl av fluiden.
+Den Euleriska metoden går ut på att man har en fixed volym där man på bestämda positioner (celler) räknar ut fluidens egenskaper så som densitet, hastighet, tryck osv.
+I den Lagrangiska metoden behandlar man istället fluiden som en uppsättning partiklar som skulle kunna representera en molekyl av fluiden.
 Varje partikel har egenskaper som hastighet, acceleration och position men även tryck och densitet.
-Det Lagrangiska tillvägagångsättet att simulera fluider är vanligt och relativt enkelt att implementera.
+Det Lagrangiska tillvägagångssättet att simulera fluider är vanligt och relativt enkelt att implementera.
 
 “Smoothed Particle Hydrodynamics” (SPH)\cite{sph} är en Lagrangisk metod för att simulera fluider.
 Den togs fram på 70-talet i syfte att lösa astrofysiska problem.
-SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämningslängd” (även kallat interaktionsradie) jämnar ut en partikels egenskaper med hjälp av olka filterkärnor.
+SPH delar upp fluiden i diskreta element (partiklar) där en bestämd “utjämningslängd” (även kallat interaktionsradie) jämnar ut en partikels egenskaper med hjälp av olika filterkärnor.
 Vilken filterkärna som används beror på vilken egenskap som ska jämnas ut.
-När en fluid representeras av en uppsättning partiklar är mass-konserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
+När en fluid representeras av en uppsättning partiklar är masskonserveringen given då det alltid finns en bestämd mängd partiklar med en bestämd massa.
 Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper inom partikelns interaktionsradie.
 \begin{figure}[H]
   \centering
@@ -110,8 +110,8 @@ Varje egenskap hos partikeln beräknas med avseende på alla andras egenskaper i
 
 \subsection{Mass-Densitet}
 Massan för en partikel bestäms innan simuleringen och ses som en konstant.
-För att bestämma mass-densiteten summeras massan för alla partiklar inom interaktionsradien och viktas med en filterkärna baserad på Gaussian (\ref{eq:w_def}).
-Resultatet blir mass-densiteten kring partikeln.
+För att bestämma massdensiteten summeras massan för alla partiklar inom interaktionsradien och viktas med en filterkärna baserad på Gaussian (\ref{eq:w_def}).
+Resultatet blir massdensiteten kring partikeln.
 \begin{equation}
 \rho^{}_{i} = \sum_{\lim_{j}} {\it m_j W_{def} (r_i-r_j,h)}
 \end{equation}
@@ -123,7 +123,7 @@ Resultatet blir mass-densiteten kring partikeln.
 \subsection{Krafter}
 \subsubsection{Tryck}
 Trycket är den första delen av högerledet i Navier Stokes ekvation.
-Trycket kan bestämmas med den idella gaslagen:
+Trycket kan bestämmas med den ideala gaslagen:
 \begin{equation}
 {\it pV = nRT}
 \end{equation}
@@ -136,11 +136,11 @@ För att få attraherande krafter måste ta hänsyn till vilodensiteten. Uttryck
 \end{equation}
 
 
-För att få en inkopresibel fluid behöver styvhetskonstanten k vara så hög som möjligt. Det betyder att ingen partikel ska kunna gå in i den andra. Detta kan bli ett problem vilket tas upp senare i rapporten.
+För att få en inkompressibel fluid behöver styvhetskonstanten k vara så hög som möjligt. Det betyder att ingen partikel ska kunna gå in i den andra. Detta kan bli ett problem vilket tas upp senare i rapporten.
 
 För att bestämma kraften från trycket summeras trycket hos partiklar inom interaktionsradien på liknande sätt som för mass-densiteten (\ref{eq:f_tryck}).
-Viktningskärnan som används för denna summering är tillskillnad från mass-densiteten nu mycket snävare och spetsig (\ref{eq:w_tryck}).
-För att få en jämnare kraftfördelning som mer följer Newtons 3de lag används följande summering.
+Viktningskärnan som används för denna summering är till skillnad från massdensiteten nu mycket snävare och spetsig (\ref{eq:w_tryck}).
+För att få en jämnare kraftfördelning som mer följer Newtons tredje lag används följande summering.
 
 \begin{equation} \label{eq:f_tryck}
 f^{tryck}_i = - \sum_{j \neq i} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} \nabla {\it W_{tryck} (r_i - r_j,h)}
@@ -163,7 +163,7 @@ f^{tryck}_i = - \sum_{j \neq i} \frac{\it p_i + p_j}{2} \frac{m_j}{\rho^{}_{i} \
 Viskositeten är den andra delen av högerledet i Navier-Stokes ekvation (\ref{eq:navier-stokes-1}).
 Viskositeten står för strömningsmotståndet i fluiden.
 Den uppkommer ifrån friktionen mellan partiklarna och minskar den relativa hastigheten mellan dem.
-Viskositetens storlek bestämms av en konstant som beror på vilken typ av fluid man ska simulera.
+Viskositeten storlek bestäms av en konstant som beror på vilken typ av fluid man ska simulera.
 Kraften som viskositeten påverkar partikeln med fås av uttrycket:
 \begin{equation}
 f^{viskositet}_i = \mu \sum_{j} {\it \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} (u_j - u_i) \nabla^{2}_{} W_{viskositet} (r_i - r_j,h)}
@@ -173,7 +173,7 @@ f^{viskositet}_i = \mu \sum_{j} {\it \frac{m_j}{\rho^{}_{i} \rho^{}_{j}} (u_j - 
 {\it W_{viskoitet} = \frac{45}{\pi h^6} {(h-r)}}
 \end{equation}
 
-Där den relativa hastigheten används för att få en symetrisk kraft som föjer Newtons 3de lag. Viktningsknärnan är alltid positiv för att alltid fungera som en dämpningsterm och inte tillsätta energi i systemet och göra det ostabilt. 
+Där den relativa hastigheten används för att få en symmetrisk kraft som följer Newtons tredje lag. Viktningsknärnan är alltid positiv för att alltid fungera som en dämpningsterm och inte tillsätta energi i systemet och göra det instabilt. 
 
 \subsubsection{Gravitation}
 Gravitationen påverkar alla partiklar lika mycket enligt uttrycket:
@@ -196,10 +196,10 @@ Den uppdaterar partikelns acceleration vilket simulerar en vägg.
 
 \subsubsection{Kollisionspartiklar}
 I simuleringen kan man lägga till kanter i form av kantpartiklar.
-Kantpartiklarna defineras som de andra partiklarna men med tyngre massa, därmed större mass-densitet och tryck.
+Kantpartiklarna definieras som de andra partiklarna men med tyngre massa, därmed större massdensitet och tryck.
 De funkar som de andra partiklar förutom att deras position inte ändras.
 Med deras tunga massa och fix positionering fungerar de som kanter.
-I en offline simulering räcker denna definering av kanter.
+I en offline simulering räcker denna definition av kanter.
 Men för en interaktiv simulering kan inte tidssteget vara tillräckligt litet för att det ska fungera bra.
 För enstaka partiklar eller partiklar med höga hastigheter hinner inte kantpartiklarna påverka de inkommande partiklarna.
 Partiklarnas hastighet förändras då inte och åker igenom kanten. 
@@ -211,12 +211,12 @@ Partiklarnas hastighet förändras då inte och åker igenom kanten.
 \end{figure}
 
 För att få bättre kanter i en realtids simulering behövs en omedelbar verkan på partikelns hastighet då de träffar kanten.
-Det fås genom att updatera partiklarnas hastighet på ett annat sätt då de är inom kantpartiklarnas interaktionsområde.
-Istället för Navier Stokes ekvation för updatering av hastigheten används en enkel partikel mot partikel kollesionshantering.
-En reflektionsvinkel beräknas mellan partiklarna och hastigheten updateras i den riktningen.
+Det fås genom att uppdatera partiklarnas hastighet på ett annat sätt då de är inom kantpartiklarnas interaktionsområde.
+Istället för Navier-Stokes ekvation för uppdatering av hastigheten används en enkel partikel mot partikel kollisionshantering.
+En reflektionsvinkel beräknas mellan partiklarna och hastigheten uppdateras i den riktningen.
 
 \subsection{Integrering}
-För updateringa av position och hastighet har integreringsmetoden Leap-Frog används. Den fungerar genom att ta halva steg för positionen och hastigheten.
+För uppdatering av position och hastighet har integreringsmetoden Leap-Frog används. Den fungerar genom att ta halva steg för positionen och hastigheten.
 Hastigheten börjar ett halvt steg bakåt.
 I och med det så “hoppar” positionen och hastigheten över varandra.
 Hastigheten för den aktuella tiden fås approximativt av halvstegen bakom och framför.
@@ -246,7 +246,7 @@ I steg ett delas simuleringen upp i ett rutnät med höjd och bredd lika med int
 Varje partikel i systemet koppas till den lista vars cell partikeln befinner sig i.
 
 I steg två kontrolleras vilka andra partiklar som befinner sig inom interaktionsradien till varje partikel och dessa placeras i en lista av grannar till partikeln i fråga.
-För att undvika kvadratisk tidskomplexitet i denna kontroll använder man det faktum att samtliga partiklar som är grannar till en specifika partikel antingen kommer befinna sig i samma cell som partilen i fråga eller någon av de 8 omkringliggande cellerna och utför enbart kontrollen för listorna kopplade till dessa 9 celler samt så begränsas antalet grannar i listan till 64.
+För att undvika kvadratisk tidskomplexitet i denna kontroll använder man det faktum att samtliga partiklar som är grannar till en specifika partikel antingen kommer befinna sig i samma cell som partikelen i fråga eller någon av de 8 omkringliggande cellerna och utför enbart kontrollen för listorna kopplade till dessa 9 celler samt så begränsas antalet grannar i listan till 64.
 
 I uträkningen av hydrodynamiken används sedan endast de partiklar som finns i listan av grannar för den aktuella partikeln.
 Vilket minskar tidskomplexiteten markant.
@@ -255,25 +255,25 @@ Vid beräkningen av hydrodynamiken så beror varje partikels tillstånd enbart p
 Det finns alltså inga teoretiska hinder för räkna ut hydrodynamiken för samtliga partiklar samtidigt.
 
 OpenMP \cite{openmp} har används för att räkna på flera partiklar samtidigt.
-\textit{pragma}-direktiv har placerats innan de lopar som itererar genom partiklarna för att istruera kompilatorn om att dessa lopar kan köras parallellt på centralprocessorn.
+\textit{pragma}-direktiv har placerats innan de loopar som itererar genom partiklarna för att instruera kompilatorn om att dessa loopar kan köras parallellt på centralprocessorn.
 
 \section{Rendering}
 För att rita simuleringen skickas en lista med koordinater för samtliga partiklar via OpenGL till grafikkortet.
-Två olika ritlägen finns i simuleringen.
+Två olika metoder för utritning finns i simuleringen.
 Dels ett punktläge där varje partikel helt enkelt ritas ut som en punkt och dels metaball-läget.
 
 I metaball läget används metaballs för att rita ut partiklarna.
 Metaballs fungerar på så sätt att man för varje partikel definierar en radialt avtagande funktion.
-Förje punkt i simuleringsmiljön summerar man sedan dessa funktioner och kollar ifall summan är över ett tröskelvärde.
+För varje punkt i simuleringsmiljön summerar man sedan dessa funktioner och kollar ifall summan är över ett tröskelvärde.
 Om den är över tröskelvärdet säger man att punkten är fylld och annars tom.
 På detta sätt kan man representera partiklar som bollar som har egenskapen att de ser ut att smälta ihop då de kommer nära varandra.
 Så kallade \textit{metaballs}.
 
-Implementationen av metaballs i denna simuleringen fungerar på så sätt att varje partikel ritas ut som en pointsprite vars textur definieras av en fragment-shader (gradientball.frag) som texturerar pointspriten som en radialtavtagande gradient enligt funktionen:
+Implementationen av metaballs i denna simuleringen fungerar på så sätt att varje partikel ritas ut som en pointsprite vars textur definieras av en fragment-shader (gradientball.frag) som texturerar pointspriten som en radialt avtagande gradient enligt funktionen:
 \begin{equation}
 r^{4} -r^{2} + 0.25
 \end{equation}
-Som en optimeringsåtgärd räknas $ r^{2} $ ut genom att ta skälarprodukten av den vektor som går mellan bildpunkten och partikelnskoordinater med sig själv.
+Som en optimeringsåtgärd räknas $ r^{2} $ ut genom att ta skälarprodukten av den vektor som går mellan bildpunkten och partikelns koordinater med sig själv.
 
 Istället för att rita partiklarna till skärmen så används efterbehandling.
 Bilden renderas istället till en textur som behandlas i en fragment-shader (metaballs.frag) för att sedan ritas på skärmen.
@@ -284,7 +284,7 @@ På så sätt åstadkoms en 3D-effekt på vätskan.
 \clearpage
 
 \section{Resultat}
-Den interaktiva applikationen som togs fram för att demonstrera simuleringen klarar av att simulera och visa ca 16000st partiklar samtidigt.
+Den interaktiva applikationen som togs fram för att demonstrera simuleringen klarar av att simulera och visa ca 16000 st partiklar samtidigt.
 Det gjordes ett flertal olika begynnelsevillkor för fluiden.
 I några fall släpptes vätskan ifrån en höjd för att studera hur komprimerad vätskan blev.
 Det testades också att distribuera ut vätskan över tid, ungefär som en vattenspridare.
@@ -336,7 +336,11 @@ Detta gör att ett större tidssteg kan användas utan att systemet stabilitet p
 Det finns även andra metoder baserade på SPH som lyckas bibehålla en hög styvhet utan att påverka stabiliteten på systemet, tex Constraint Fluids\cite{bodin} av Bodin et. al.
 
 \subsubsection{Sortering av grannar}
-När systemet delas in i ett rutnät för sortering av grannar så är inte interaktionsradien den sjävklara storleken på cellerna. En annan vanlig lösning är celler med en bredd och höjd som är två gånger interaktionsradien. Fördelen med detta är att det krävs mindre celler överlag samt att man endast behöver iterera genom fyra celler för att hitta en partikels grannar istället för nio. En nackdel är att den totala arean med partiklar som måste kontrolleras blir större och kommer därmed innehålla fler överflödiga partiklar. Vad som är effektivast är oklart och har en undersökts.
+När systemet delas in i ett rutnät för sortering av grannar så är inte interaktionsradien den självklara storleken på cellerna.
+En annan vanlig lösning är celler med en bredd och höjd som är två gånger interaktionsradien.
+Fördelen med detta är att det krävs mindre celler överlag samt att man endast behöver iterera genom fyra celler för att hitta en partikels grannar istället för nio.
+En nackdel är att den totala arean med partiklar som måste kontrolleras blir större och kommer därmed innehålla fler överflödiga partiklar.
+Vad som är effektivast är oklart och har ej undersökts.
 
 % \section{Krafter}
 % \subsection{Mass-Densitet}
