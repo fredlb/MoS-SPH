@@ -239,6 +239,7 @@ Det är en stabil och snabb integreringsmetod som lämpar sig till simuleringen.
 
 \clearpage
 \section{Implementering}
+Ett problem med simuleringar som denna där partiklarnas tillstånd är beroende av varandra är att tidskomplexiteten ökar kvadratiskt om man för varje partikel måste utföra beräkningar för alla andra partiklar.
 Två steg används för att lösa detta problem.
 
 I steg ett delas simuleringen upp i ett rutnät med höjd och bredd lika med interaktionsradien med en lista kopplad till varje cell i rutnätet.
@@ -328,11 +329,14 @@ GPGPU (General-purpose computing on graphics processing units) kan tillämpas f�
 Modern grafikhårdvara är speciellt gjord för att göra enkla beräkningar parallellt och därmed skulle man kunna beräkna på fler partiklar parallellt.
 
 \subsubsection{PCISPH}
-PCISPH (predictive-corrective incompressible SPH)[REFERENS] är en utökad SPH-metod.
+PCISPH (predictive-corrective incompressible SPH)\cite{solenthaler} är en utökad SPH-metod.
 Metoden försöker att approximera hur trycket skall ändras utan att faktiskt beräkna trycket.
 Detta gör att ett större tidssteg kan användas utan att systemet stabilitet påverkas.
 
 Det finns även andra metoder baserade på SPH som lyckas bibehålla en hög styvhet utan att påverka stabiliteten på systemet, tex Constraint Fluids\cite{bodin} av Bodin et. al.
+
+\subsubsection{Sortering av grannar}
+När systemet delas in i ett rutnät för sortering av grannar så är inte interaktionsradien den sjävklara storleken på cellerna. En annan vanlig lösning är celler med en bredd och höjd som är två gånger interaktionsradien. Fördelen med detta är att det krävs mindre celler överlag samt att man endast behöver iterera genom fyra celler för att hitta en partikels grannar istället för nio. En nackdel är att den totala arean med partiklar som måste kontrolleras blir större och kommer därmed innehålla fler överflödiga partiklar. Vad som är effektivast är oklart och har en undersökts.
 
 % \section{Krafter}
 % \subsection{Mass-Densitet}
@@ -407,6 +411,8 @@ Det finns även andra metoder baserade på SPH som lyckas bibehålla en hög sty
   http://openmp.org/
 \bibitem{bodin}
    K. Bodin, C. Lacoursière, M. Servin, \emph{Constraint Fluids}, IEEE Transactions on Visualization and Computer Graphics, Jan 2011 
+\bibitem{solenthaler}
+    B. Solenthaler, R. Pajarola, \emph{Predictive-corrective incompressible SPH}, University of Zurich, 2009
 \end{thebibliography}
 
 
